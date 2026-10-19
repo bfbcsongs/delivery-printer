@@ -1203,10 +1203,9 @@ function loadLedger() {
     resetInactivityTimer();
 }
 
-// ============================================================
-// RAWBT THERMAL PRINTER INTEGRATION (58mm)
-// ============================================================
-
+// ==========================================
+// RAWBT THERMAL PRINTER INTEGRATION (FIXED)
+// ==========================================
 function printRowReceipt(rowNum) {
     const nameInput = document.getElementById(`ledgerName_${rowNum}`);
     const customerName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : `Customer ${rowNum}`;
@@ -1245,19 +1244,22 @@ CAB        ${String(cab).padEnd(5)}
 BO         ${String(bo).padEnd(5)}              
 --------------------------------
 BILLING:              P ${String(billing.toFixed(2)).padStart(7)}
-PREV BAL:             P ${String(bal.toFixed(2)).padStart(7)}
+PREVIOUS BAL:         P ${String(bal.toFixed(2)).padStart(7)}
 --------------------------------
 GRAND TOTAL:          P ${String((billing + bal).toFixed(2)).padStart(7)}
-COLLECTION (PAID):    P ${String(payment.toFixed(2)).padStart(7)}
+PAYMENT (PAID):       P ${String(payment.toFixed(2)).padStart(7)}
 --------------------------------
-REMAINING UTANG:      P ${String(utang.toFixed(2)).padStart(7)}
+BALANSE:              P ${String(utang.toFixed(2)).padStart(7)}
 ================================
     Salamat sa Pagtangkilik!
 ================================\n\n\n`;
 
-    const S = encodeURIComponent(receiptText);
-    window.location.href = `intent:${S}#Intent;scheme=rawbt;package=ru.a404.rawbtprinter;end;`;
+    const encodedText = encodeURIComponent(receiptText);
+    
+    // Inayos na Intent Link para siguradong bubuksan ang RawBT app
+    window.location.href = `intent:#Intent;scheme=rawbt;package=ru.a404.rawbtprinter;S.text=${encodedText};end;`;
 }
+
 
 // ============================================================
 // START APP

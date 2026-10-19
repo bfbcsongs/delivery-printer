@@ -1199,6 +1199,62 @@ function loadLedger() {
 }
 
 // ============================================================
+// RAWBT THERMAL PRINTER INTEGRATION (58mm)
+// ============================================================
+
+function printRowReceipt(rowNum) {
+    const nameInput = document.getElementById(`ledgerName_${rowNum}`);
+    const customerName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : `Customer ${rowNum}`;
+    
+    const dry = parseFloat(document.getElementById(`ledgerDry_${rowNum}`).value) || 0;
+    const fresh = parseFloat(document.getElementById(`ledgerFresh_${rowNum}`).value) || 0;
+    const cab = parseFloat(document.getElementById(`ledgerCab_${rowNum}`).value) || 0;
+    const bo = parseFloat(document.getElementById(`ledgerBo_${rowNum}`).value) || 0;
+    const bal = parseFloat(document.getElementById(`ledgerBal_${rowNum}`).value) || 0;
+    
+    const billingStr = document.getElementById(`ledgerBilling_${rowNum}`).value.replace(/,/g, '');
+    const billing = parseFloat(billingStr) || 0;
+    
+    const paymentStr = document.getElementById(`ledgerPay_${rowNum}`).value.replace(/,/g, '');
+    const payment = parseFloat(paymentStr) || 0;
+    
+    const utangStr = document.getElementById(`ledgerRem_${rowNum}`).value.replace(/,/g, '');
+    const utang = parseFloat(utangStr) || 0;
+
+    const dateVal = document.getElementById("displayFileDate") ? document.getElementById("displayFileDate").innerText : "TODAY";
+    const routeName = document.getElementById("displayFileName") ? document.getElementById("displayFileName").innerText : "Paul";
+
+    let receiptText = 
+`================================
+       MIKI TABLE & LEDGER      
+================================
+Date: ${dateVal}
+Route: ${routeName}
+Customer: ${customerName}
+--------------------------------
+ITEM       QTY    
+--------------------------------
+DRY        ${String(dry).padEnd(5)}              
+FRESH      ${String(fresh).padEnd(5)}              
+CAB        ${String(cab).padEnd(5)}              
+BO         ${String(bo).padEnd(5)}              
+--------------------------------
+BILLING:              P ${String(billing.toFixed(2)).padStart(7)}
+PREV BAL:             P ${String(bal.toFixed(2)).padStart(7)}
+--------------------------------
+GRAND TOTAL:          P ${String((billing + bal).toFixed(2)).padStart(7)}
+COLLECTION (PAID):    P ${String(payment.toFixed(2)).padStart(7)}
+--------------------------------
+REMAINING UTANG:      P ${String(utang.toFixed(2)).padStart(7)}
+================================
+    Salamat sa Pagtangkilik!
+================================\n\n\n`;
+
+    const S = encodeURIComponent(receiptText);
+    window.location.href = `intent:${S}#Intent;scheme=rawbt;package=ru.a404.rawbtprinter;end;`;
+}
+
+// ============================================================
 // START APP
 // ============================================================
 

@@ -242,7 +242,7 @@ function handleModalSubmit() {
     const nameVal = document.getElementById("modalNameInput").value.trim();
 
     if (!dateVal || !nameVal) {
-        alert("Both Date and Name are required!");
+        alert("Please enter both Date and Salesman/Route Name!");
         return;
     }
 
@@ -250,19 +250,16 @@ function handleModalSubmit() {
         const history = JSON.parse(localStorage.getItem("miki_30day_history") || "[]");
         const isDuplicate = history.some(item => item.date === dateVal && item.date !== currentSessionDate);
 
-        if (isDuplicate || (dateVal === currentSessionDate && history.some(item => item.date === dateVal))) {
-            const confirmOverwrite = confirm(`Warning: A saved file with the date ${dateVal} already exists. Do you want to overwrite/update this file?`);
+        if (isDuplicate) {
+            const confirmOverwrite = confirm(`Warning: A saved file with date ${dateVal} already exists. Do you want to overwrite it?`);
             if (!confirmOverwrite) return;
         }
-    }
 
-    currentSessionDate = dateVal;
-    currentSessionName = nameVal;
+        currentSessionDate = dateVal;
+        currentSessionName = nameVal;
+        updateSessionDateDisplay();
+        document.getElementById("setupModal").style.display = "none";
 
-    updateSessionDateDisplay();
-    document.getElementById("setupModal").style.display = "none";
-
-    if (modalMode === "SAVE") {
         forceSaveCurrentDay();
         clearAllLedgerInputs();
 
@@ -272,13 +269,22 @@ function handleModalSubmit() {
 
         localStorage.removeItem("miki_ledger_data");
         setEncodingEditable(false);
+        alert("Ledger saved successfully!");
     } else {
+        // OPEN / NEW LEDGER MODE
+        currentSessionDate = dateVal;
+        currentSessionName = nameVal;
+
+        updateSessionDateDisplay();
+        document.getElementById("setupModal").style.display = "none";
+
         setPreviewMode(false);
         setEncodingEditable(true);
         resetInactivityTimer();
 
         applyDefaultNamesIfEmpty();
         saveLedger();
+        loadRowToMain(1);
     }
 }
 
@@ -678,7 +684,6 @@ function loadRowToMain(row) {
 
     const rawColln = document.getElementById(`ledgerPay_${row}`).value.replace(/,/g, '');
 
-    // Inayos para palaging i-load ang totoong pumasok na payment value
     document.getElementById("inputPay").value = rawColln !== "" ? rawColln : "";
 
     calculateMain();

@@ -7,1101 +7,377 @@
 
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#111827">
-<link rel="stylesheet" href="style.css">
+
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:#f3f4f6;color:#111827;font-family:Arial,Helvetica,sans-serif}
+body{min-height:100vh;padding-bottom:12px}
+button,input{font-family:inherit}
+button{border:0;cursor:pointer;touch-action:manipulation}
+.main-wrapper{width:100%;max-width:700px;margin:0 auto;padding:4px}
+
+/* MODAL */
+.setup-modal-overlay{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:15px}
+.setup-modal{width:100%;max-width:360px;background:#fff;border-radius:10px;padding:20px;position:relative;box-shadow:0 15px 35px rgba(0,0,0,.3)}
+.modal-close-btn{position:absolute;top:10px;right:12px;background:none;border:none;font-size:22px;color:#6b7280;cursor:pointer}
+.setup-modal h3{margin-top:0;font-size:16px;font-weight:900;color:#111827}
+.setup-modal label{display:block;margin:10px 0 4px;font-size:12px;font-weight:900;color:#374151}
+.setup-modal input{width:100%;height:40px;border:1px solid #d1d5db;border-radius:6px;padding:0 10px;font-size:14px;font-weight:700;outline:none}
+.setup-modal input:focus{border-color:#2563eb;box-shadow:0 0 0 2px rgba(37,99,235,.15)}
+.setup-btn{width:100%;height:42px;margin-top:15px;background:#2563eb;color:#fff;border-radius:6px;font-size:13px;font-weight:900}
+
+/* TABLES GENERAL */
+.table-box{background:#fff;border:1px solid #d1d5db;border-radius:6px;margin-bottom:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th,td{border:1px solid #d1d5db;padding:0;text-align:center;font-size:11px}
+thead th{height:28px;background:#374151;color:#fff;font-weight:900;font-size:11px}
+input[type="number"],input[type="text"]{width:100%;height:27px;border:0;background:transparent;text-align:center;color:#111827;font-size:11px;font-weight:800;outline:none;padding:0 2px}
+
+/* FIRST TABLE */
+.miki{background:#f9fafb;font-weight:900;font-size:11px;color:#111827}
+.amount{background:#f9fafb;font-weight:900;font-size:11px}
+.net-total-large{background:#111827;color:#fff;font-size:12px;font-weight:900;text-align:center}
+.miki-net-total-large{background:#111827;color:#fff;font-size:11px;font-weight:900;text-align:center}
+.active-customer-box{background:#dbeafe;color:#1e40af;font-weight:900;font-size:12px;text-align:center;padding:2px}
+.label-cell{background:#f9fafb;font-weight:900;font-size:11px}
+.direct-amount-input{font-weight:900;background:#fff}
+
+/* SYNC PANEL */
+.sync-panel{display:grid;grid-template-columns:repeat(5,1fr);gap:2px;padding:5px;background:#e5e7eb}
+.sync-cell{background:#fff;border:1px solid #d1d5db;border-radius:4px;padding:2px;text-align:center}
+.sync-cell label{display:block;font-size:9px;font-weight:900;color:#4b5563}
+.sync-cell input{height:22px;font-size:11px}
+.btn-container{display:flex;gap:2px;align-items:center}
+.action-btn{width:100%;height:31px;border-radius:4px;color:#fff;font-size:10px;font-weight:900}
+.install-btn{background:#059669;display:none}
+.clear-btn{background:#dc2626}
+
+/* SESSION BAR */
+.session-bar{background:#111827;color:#fff;padding:6px 8px;border-radius:6px;display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.date-foreground{font-size:12px;font-weight:900}
+.weekday-display{color:#9ca3af;margin:0 4px}
+.session-actions{display:flex;gap:4px}
+.btn-sm{height:28px;padding:0 8px;border-radius:4px;font-size:10px;font-weight:900;color:#fff}
+.save-btn{background:#059669}
+
+/* CUSTOMER LIST TABLE */
+.customer-list-watermark{position:relative}
+.customer-day-watermark{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:70px;color:rgba(0,0,0,0.03);font-weight:900;pointer-events:none;z-index:0}
+.name-input{text-align:left!important;padding-left:4px!important;font-size:11px!important}
+.readonly-col{font-size:11px;font-weight:700}
+.colln-input{background:#ecfdf5!important;font-weight:900!important;color:#065f46!important}
+.net-total-red{background:#111827;color:#ef4444;font-weight:900;font-size:10px}
+.print-row-btn{background:#2563eb;color:#fff;font-size:8px;font-weight:900;height:22px;width:95%;border-radius:3px}
+
+/* THIRD TABLE & NOTE BAR */
+.third-summary-cell{background:#f9fafb;font-weight:900;font-size:10px;text-align:center;padding:2px}
+.summary-label{font-size:9px;color:#6b7280}
+.coh-cell input{font-weight:900;font-size:13px;color:#059669}
+.grand-total-cell div{font-size:13px;font-weight:900;color:#2563eb}
+.extra-item-input{text-align:left!important;padding-left:4px!important;font-size:10px}
+.extra-amount-input{font-size:11px}
+.extra-total-label{background:#111827;color:#fff;font-weight:900;font-size:10px;text-align:center}
+.extra-total-amount{background:#111827;color:#fff;font-weight:900;font-size:11px;text-align:center}
+.note-bar{margin-top:6px;margin-bottom:8px}
+.note-bar input{background:#fff;border:1px solid #d1d5db;border-radius:6px;height:34px;padding:0 8px;font-weight:900}
+
+/* HISTORY SECTION */
+.history-section{background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:8px}
+.history-title{font-size:12px;font-weight:900;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.history-list{max-height:160px;overflow-y:auto}
+.history-item{display:flex;justify-content:space-between;align-items:center;padding:6px;border-bottom:1px solid #e5e7eb;font-size:11px}
+.history-item-info{font-weight:900;cursor:pointer;flex:1}
+.history-actions{display:flex;gap:4px}
+</style>
 </head>
 
 <body>
 
-<!-- DYNAMIC SETUP / CONFIRMATION MODAL -->
+<!-- SETUP MODAL -->
 <div id="setupModal" class="setup-modal-overlay">
     <div class="setup-modal">
-
-        <button class="modal-close-btn"
-                onclick="closeSetupModal()"
-                title="Close">
-            &times;
-        </button>
-
-        <h3 id="modalTitle">
-            Start New Ledger File
-        </h3>
-
-        <p id="modalSubtext"
-           style="font-size:12px;color:#6b7280;">
-            Please fill out both the Date and Name to unlock encoding.
-        </p>
-
-        <label for="modalDateInput">
-            Date
-        </label>
-
-        <input type="date"
-               id="modalDateInput">
-
-        <label for="modalNameInput">
-            Route / Salesman Name
-        </label>
-
-        <input type="text"
-               id="modalNameInput"
-               placeholder="ana nagan mo boy">
-
-        <button id="modalActionBtn"
-                class="setup-btn"
-                onclick="handleModalSubmit()">
-            Open Ledger
-        </button>
-
+        <button class="modal-close-btn" onclick="closeSetupModal()">&times;</button>
+        <h3 id="modalTitle">Start New Ledger File</h3>
+        <p id="modalSubtext" style="font-size:11px;color:#6b7280;margin-bottom:10px;">Please fill out both Date and Name.</p>
+        <label for="modalDateInput">Date</label>
+        <input type="date" id="modalDateInput">
+        <label for="modalNameInput">Route / Salesman Name</label>
+        <input type="text" id="modalNameInput" placeholder="Enter name">
+        <button id="modalActionBtn" class="setup-btn" onclick="handleModalSubmit()">Open Ledger</button>
     </div>
 </div>
-
 
 <div class="main-wrapper">
 
-
-    <!-- =========================================================
-         FIRST TABLE
-         ========================================================= -->
-
+    <!-- FIRST TABLE -->
     <div class="table-box">
-
         <table>
-
             <thead>
-
                 <tr>
-
-                    <th>
-                        Item
-                    </th>
-
-                    <th>
-                        Qty
-                    </th>
-
-                    <th id="priceLockHeader"
-                        class="lockable-header"
-                        onclick="handlePriceKeyClick()"
-                        title="Tap 5 times to Lock/Unlock Prices">
-                        Price 🔒
-                    </th>
-
-                    <th>
-                        Amount
-                    </th>
-
+                    <th>Item</th>
+                    <th>Qty</th>
+                    <th id="priceLockHeader" class="lockable-header" onclick="handlePriceKeyClick()" title="Tap 5 times">Price 🔒</th>
+                    <th>Amount</th>
                 </tr>
-
             </thead>
-
-
             <tbody>
-
                 <tr>
-
-                    <td class="miki">
-                        DRY
-                    </td>
-
-                    <td>
-                        <input type="number"
-                               id="qtyReg"
-                               min="0"
-                               step="any"
-                               inputmode="decimal"
-                               oninput="syncFromTable('Reg')">
-                    </td>
-
-                    <td>
-                        <input type="number"
-                               id="priceReg"
-                               class="price-input"
-                               min="0"
-                               step="any"
-                               value="50"
-                               oninput="calculateMain()"
-                               readonly
-                               style="background-color:#e5e7eb;">
-                    </td>
-
-                    <td class="amount"
-                        id="amountReg">
-                        0
-                    </td>
-
+                    <td class="miki">DRY</td>
+                    <td><input type="number" id="qtyReg" min="0" step="any" inputmode="decimal" oninput="syncFromTable('Reg')"></td>
+                    <td><input type="number" id="priceReg" class="price-input" min="0" step="any" value="50" oninput="calculateMain()" readonly style="background-color:#e5e7eb;"></td>
+                    <td class="amount" id="amountReg">0</td>
                 </tr>
-
-
                 <tr>
-
-                    <td class="miki">
-                        FRESH
-                    </td>
-
-                    <td>
-                        <input type="number"
-                               id="qtyFresh"
-                               min="0"
-                               step="any"
-                               inputmode="decimal"
-                               oninput="syncFromTable('Fresh')">
-                    </td>
-
-                    <td>
-                        <input type="number"
-                               id="priceFresh"
-                               class="price-input"
-                               min="0"
-                               step="any"
-                               value="50"
-                               oninput="calculateMain()"
-                               readonly
-                               style="background-color:#e5e7eb;">
-                    </td>
-
-                    <td class="amount"
-                        id="amountFresh">
-                        0
-                    </td>
-
+                    <td class="miki">FRESH</td>
+                    <td><input type="number" id="qtyFresh" min="0" step="any" inputmode="decimal" oninput="syncFromTable('Fresh')"></td>
+                    <td><input type="number" id="priceFresh" class="price-input" min="0" step="any" value="50" oninput="calculateMain()" readonly style="background-color:#e5e7eb;"></td>
+                    <td class="amount" id="amountFresh">0</td>
                 </tr>
-
-
                 <tr>
-
-                    <td class="miki">
-                        CAB
-                    </td>
-
-                    <td>
-                        <input type="number"
-                               id="qtyCab"
-                               min="0"
-                               step="any"
-                               inputmode="decimal"
-                               oninput="syncFromTable('Cab')">
-                    </td>
-
-                    <td>
-                        <input type="number"
-                               id="priceCab"
-                               class="price-input"
-                               min="0"
-                               step="any"
-                               value="40"
-                               oninput="calculateMain()"
-                               readonly
-                               style="background-color:#e5e7eb;">
-                    </td>
-
-                    <td class="amount"
-                        id="amountCab">
-                        0
-                    </td>
-
+                    <td class="miki">CAB</td>
+                    <td><input type="number" id="qtyCab" min="0" step="any" inputmode="decimal" oninput="syncFromTable('Cab')"></td>
+                    <td><input type="number" id="priceCab" class="price-input" min="0" step="any" value="40" oninput="calculateMain()" readonly style="background-color:#e5e7eb;"></td>
+                    <td class="amount" id="amountCab">0</td>
                 </tr>
-
-
                 <tr>
-
-                    <td class="miki">
-                        BO
-                    </td>
-
-                    <td>
-                        <input type="number"
-                               id="qtyBo"
-                               min="0"
-                               step="any"
-                               inputmode="decimal"
-                               oninput="syncFromTable('Bo')">
-                    </td>
-
-                    <td>
-                        <input type="number"
-                               id="priceBo"
-                               class="price-input"
-                               min="0"
-                               step="any"
-                               value="50"
-                               oninput="calculateMain()"
-                               readonly
-                               style="background-color:#e5e7eb;">
-                    </td>
-
-                    <td class="amount"
-                        id="amountBo">
-                        0
-                    </td>
-
+                    <td class="miki">BO</td>
+                    <td><input type="number" id="qtyBo" min="0" step="any" inputmode="decimal" oninput="syncFromTable('Bo')"></td>
+                    <td><input type="number" id="priceBo" class="price-input" min="0" step="any" value="50" oninput="calculateMain()" readonly style="background-color:#e5e7eb;"></td>
+                    <td class="amount" id="amountBo">0</td>
                 </tr>
-
-
                 <tr>
-
-                    <td class="miki">
-                        TOTAL
-                    </td>
-
-                    <td></td>
-                    <td></td>
-
-                    <td class="amount"
-                        id="totalAmount">
-                        0
-                    </td>
-
+                    <td class="miki">TOTAL</td>
+                    <td></td><td></td>
+                    <td class="amount" id="totalAmount">0</td>
                 </tr>
-
-
                 <tr>
-
-                    <td colspan="2"
-                        rowspan="2"
-                        id="activeCustomerDisplay"
-                        class="active-customer-box">
-                        Row 1
-                    </td>
-
-                    <td class="label-cell">
-                        Balance
-                    </td>
-
-                    <td>
-                        <input type="number"
-                               id="inputBal"
-                               min="0"
-                               step="any"
-                               inputmode="decimal"
-                               class="direct-amount-input"
-                               oninput="calculateMain()">
-                    </td>
-
+                    <td colspan="2" rowspan="2" id="activeCustomerDisplay" class="active-customer-box">Row 1</td>
+                    <td class="label-cell">Balance</td>
+                    <td><input type="number" id="inputBal" min="0" step="any" inputmode="decimal" class="direct-amount-input" oninput="calculateMain()"></td>
                 </tr>
-
-
                 <tr>
-
-                    <td class="label-cell">
-                        Payment
-                    </td>
-
-                    <td>
-                        <input type="number"
-                               id="inputPay"
-                               min="0"
-                               step="any"
-                               inputmode="decimal"
-                               class="direct-amount-input"
-                               oninput="calculateMain()">
-                    </td>
-
+                    <td class="label-cell">Payment</td>
+                    <td><input type="number" id="inputPay" min="0" step="any" inputmode="decimal" class="direct-amount-input" oninput="calculateMain()"></td>
                 </tr>
-
-
                 <tr>
-
-                    <td style="
-                        font-size:10px;
-                        font-weight:900;
-                        color:#008cff;
-                        text-align:center;
-                    ">
-                        Proverbs 11:3
-                    </td>
-
-                    <td style="
-                        font-size:10px;
-                        font-weight:900;
-                        color:#008cff;
-                        text-align:center;
-                    ">
-                        Luke 16:10
-                    </td>
-
-                    <td class="miki-net-total-large">
-                        NET TOTAL
-                    </td>
-
-                    <td class="net-total-large"
-                        id="netTotalAmount">
-                        0
-                    </td>
-
+                    <td style="font-size:9px;font-weight:900;color:#008cff;text-align:center;">Proverbs 11:3</td>
+                    <td style="font-size:9px;font-weight:900;color:#008cff;text-align:center;">Luke 16:10</td>
+                    <td class="miki-net-total-large">NET TOTAL</td>
+                    <td class="net-total-large" id="netTotalAmount">0</td>
                 </tr>
-
             </tbody>
-
         </table>
-
 
         <div class="sync-panel">
-
-            <div class="sync-cell">
-
-                <label>
-                    Dry
-                </label>
-
-                <input type="number"
-                       id="syncDry"
-                       min="0"
-                       step="any"
-                       inputmode="decimal"
-                       oninput="syncFromPanel('Dry')">
-
-            </div>
-
-
-            <div class="sync-cell">
-
-                <label>
-                    Fresh
-                </label>
-
-                <input type="number"
-                       id="syncFresh"
-                       min="0"
-                       step="any"
-                       inputmode="decimal"
-                       oninput="syncFromPanel('Fresh')">
-
-            </div>
-
-
-            <div class="sync-cell">
-
-                <label>
-                    Cab
-                </label>
-
-                <input type="number"
-                       id="syncCab"
-                       min="0"
-                       step="any"
-                       inputmode="decimal"
-                       oninput="syncFromPanel('Cab')">
-
-            </div>
-
-
-            <div class="sync-cell">
-
-                <label>
-                    BO
-                </label>
-
-                <input type="number"
-                       id="syncBo"
-                       min="0"
-                       step="any"
-                       inputmode="decimal"
-                       oninput="syncFromPanel('Bo')">
-
-            </div>
-
-
+            <div class="sync-cell"><label>Dry</label><input type="number" id="syncDry" min="0" step="any" inputmode="decimal" oninput="syncFromPanel('Dry')"></div>
+            <div class="sync-cell"><label>Fresh</label><input type="number" id="syncFresh" min="0" step="any" inputmode="decimal" oninput="syncFromPanel('Fresh')"></div>
+            <div class="sync-cell"><label>Cab</label><input type="number" id="syncCab" min="0" step="any" inputmode="decimal" oninput="syncFromPanel('Cab')"></div>
+            <div class="sync-cell"><label>BO</label><input type="number" id="syncBo" min="0" step="any" inputmode="decimal" oninput="syncFromPanel('Bo')"></div>
             <div class="btn-container">
-
-                <button id="installBtn"
-                        class="action-btn install-btn"
-                        onclick="installApp()">
-                    INSTALL
-                </button>
-
-                <button class="action-btn clear-btn"
-                        onclick="clearMainInputs()">
-                    CLEAR
-                </button>
-
+                <button id="installBtn" class="action-btn install-btn" onclick="installApp()">INST</button>
+                <button class="action-btn clear-btn" onclick="clearMainInputs()">CLEAR</button>
             </div>
-
         </div>
-
     </div>
 
-
-    <!-- =========================================================
-         ACTIVE FILE BAR
-         ========================================================= -->
-
+    <!-- SESSION BAR -->
     <div class="session-bar">
-
-        <div class="session-info">
-
-            <div class="date-foreground">
-
-                <span id="displayFileDate">
-                    --
-                </span>
-
-                <span class="weekday-display"
-                      id="displayFileDay">
-                    ---
-                </span>
-
-                <span id="displayFileName">
-                    --
-                </span>
-
-            </div>
-
+        <div class="date-foreground">
+            <span id="displayFileDate">--</span>
+            <span class="weekday-display" id="displayFileDay">---</span>
+            <span id="displayFileName">--</span>
         </div>
-
-
         <div class="session-actions">
-
-            <button class="btn-sm save-btn"
-                    onclick="openSaveConfirmationModal()">
-                Save Day
-            </button>
-
-            <button class="btn-sm clear-btn"
-                    onclick="promptNewFile()">
-                New Day
-            </button>
-
+            <button class="btn-sm save-btn" onclick="openSaveConfirmationModal()">Save Day</button>
+            <button class="btn-sm clear-btn" onclick="promptNewFile()">New Day</button>
         </div>
-
     </div>
 
-
-    <!-- =========================================================
-         SECOND TABLE / CUSTOMER LIST
-         ========================================================= -->
-
-    <div class="table-box table-box-2 customer-list-watermark">
-
-        <!-- LARGE DAY NUMBER WATERMARK -->
-        <div class="customer-day-watermark"
-             id="customerDayWatermark">
-            --
-        </div>
-
-
+    <!-- SECOND TABLE / CUSTOMER LIST (16 ROWS WITH PRINT) -->
+    <div class="table-box customer-list-watermark">
+        <div class="customer-day-watermark" id="customerDayWatermark">--</div>
         <table>
-
             <colgroup>
-                <col style="width:12%;">
-                <col style="width:8%;">
-                <col style="width:8%;">
-                <col style="width:8%;">
-                <col style="width:8%;">
-                <col style="width:15%;">
-                <col style="width:15%;">
-                <col style="width:15%;">
                 <col style="width:13%;">
+                <col style="width:7%;">
+                <col style="width:7%;">
+                <col style="width:7%;">
+                <col style="width:7%;">
+                <col style="width:11%;">
+                <col style="width:13%;">
+                <col style="width:13%;">
+                <col style="width:13%;">
+                <col style="width:9%;">
             </colgroup>
-
-
             <thead>
-
                 <tr>
-
-                    <th id="lockHeader"
-                        class="lockable-header"
-                        onclick="handleKeyClick()"
-                        title="Tap 5 times to Lock/Unlock">
-                        🔒
-                    </th>
-
-                    <th>
-                        Dry
-                    </th>
-
-                    <th>
-                        Fresh
-                    </th>
-
-                    <th>
-                        Cab
-                    </th>
-
-                    <th>
-                        BO
-                    </th>
-
-                    <th>
-                        Bal
-                    </th>
-
-                    <th>
-                        Billing
-                    </th>
-
-                    <th class="colln-header">
-                        Coll'n
-                    </th>
-
-                    <th>
-                        Utang
-                    </th>
-
+                    <th id="lockHeader" class="lockable-header" onclick="handleKeyClick()" title="Tap 5 times">🔒</th>
+                    <th>Dry</th><th>Fresh</th><th>Cab</th><th>BO</th><th>Bal</th><th>Billing</th><th class="colln-header">Coll'n</th><th>Utang</th><th>Print</th>
                 </tr>
-
             </thead>
-
-
             <tbody>
-
                 <script>
-
+                    const defaultNames = [
+                        "Bag", "Ces", "Ed", "Ris", "Raq", "Lin",
+                        "7/11", "Lea", "Jen", "Swe", "Lan", "Jea",
+                        "", "", "", "Flor"
+                    ];
                     for (let i = 1; i <= 16; i++) {
-
                         document.write(`
-
                             <tr>
-
-                                <td>
-
-                                    <input type="text"
-                                           class="name-input"
-                                           id="ledgerName_${i}"
-                                           oninput="updateActiveCustomerName(${i}); saveLedger();"
-                                           onfocus="loadRowToMain(${i})"
-                                           readonly
-                                           style="background-color:#e5e7eb;">
-
-                                </td>
-
-
-                                <td>
-
-                                    <input type="text"
-                                           class="readonly-col"
-                                           id="ledgerDry_${i}"
-                                           readonly
-                                           onfocus="loadRowToMain(${i})">
-
-                                </td>
-
-
-                                <td>
-
-                                    <input type="text"
-                                           class="readonly-col"
-                                           id="ledgerFresh_${i}"
-                                           readonly
-                                           onfocus="loadRowToMain(${i})">
-
-                                </td>
-
-
-                                <td>
-
-                                    <input type="text"
-                                           class="readonly-col"
-                                           id="ledgerCab_${i}"
-                                           readonly
-                                           onfocus="loadRowToMain(${i})">
-
-                                </td>
-
-
-                                <td>
-
-                                    <input type="text"
-                                           class="readonly-col"
-                                           id="ledgerBo_${i}"
-                                           readonly
-                                           onfocus="loadRowToMain(${i})">
-
-                                </td>
-
-
-                                <td>
-
-                                    <input type="text"
-                                           class="readonly-col"
-                                           id="ledgerBal_${i}"
-                                           readonly
-                                           onfocus="loadRowToMain(${i})">
-
-                                </td>
-
-
-                                <td>
-
-                                    <input type="text"
-                                           class="readonly-col amount"
-                                           id="ledgerBilling_${i}"
-                                           readonly>
-
-                                </td>
-
-
-                                <td>
-
-    <input type="text"
-           class="readonly-col colln-input"
-           id="ledgerPay_${i}"
-           readonly
-           onclick="handleRowCollTap(${i})"
-           onfocus="loadRowToMain(${i})">
-
-</td>
-
-
-
-                                <td>
-
-                                    <input type="text"
-                                           class="readonly-col amount"
-                                           id="ledgerRem_${i}"
-                                           readonly>
-
-                                </td>
-
+                                <td><input type="text" class="name-input" id="ledgerName_${i}" value="${defaultNames[i-1]}" oninput="updateActiveCustomerName(${i}); saveLedger();" onfocus="loadRowToMain(${i})" readonly style="background-color:#e5e7eb;"></td>
+                                <td><input type="text" class="readonly-col" id="ledgerDry_${i}" readonly onfocus="loadRowToMain(${i})"></td>
+                                <td><input type="text" class="readonly-col" id="ledgerFresh_${i}" readonly onfocus="loadRowToMain(${i})"></td>
+                                <td><input type="text" class="readonly-col" id="ledgerCab_${i}" readonly onfocus="loadRowToMain(${i})"></td>
+                                <td><input type="text" class="readonly-col" id="ledgerBo_${i}" readonly onfocus="loadRowToMain(${i})"></td>
+                                <td><input type="text" class="readonly-col" id="ledgerBal_${i}" readonly onfocus="loadRowToMain(${i})"></td>
+                                <td><input type="text" class="readonly-col amount" id="ledgerBilling_${i}" readonly></td>
+                                <td><input type="text" class="readonly-col colln-input" id="ledgerPay_${i}" readonly onclick="handleRowCollTap(${i})" onfocus="loadRowToMain(${i})"></td>
+                                <td><input type="text" class="readonly-col amount" id="ledgerRem_${i}" readonly></td>
+                                <td><button type="button" class="print-row-btn" onclick="printRowReceipt(${i})">PRINT</button></td>
                             </tr>
-
                         `);
-
                     }
-
                 </script>
-
-
                 <tr>
-
-                    <td class="miki"
-                        style="
-                            color:#dc2626;
-                            font-size:9px;
-                            padding:0 1px;
-                        ">
-                        NET TOTAL
-                    </td>
-
-                    <td class="net-total-red"
-                        id="totalDry">
-                        0
-                    </td>
-
-                    <td class="net-total-red"
-                        id="totalFresh">
-                        0
-                    </td>
-
-                    <td class="net-total-red"
-                        id="totalCab">
-                        0
-                    </td>
-
-                    <td class="net-total-red"
-                        id="totalBo">
-                        0
-                    </td>
-
-                    <td class="net-total-red"
-                        id="totalBal">
-                        0
-                    </td>
-
-                    <td class="net-total-red"
-                        id="totalBilling">
-                        0
-                    </td>
-
-                    <td class="net-total-red"
-                        id="totalColln">
-                        0
-                    </td>
-
-                    <td class="net-total-red"
-                        id="totalRem">
-                        0
-                    </td>
-
+                    <td class="miki" style="color:#dc2626;font-size:9px;">NET</td>
+                    <td class="net-total-red" id="totalDry">0</td>
+                    <td class="net-total-red" id="totalFresh">0</td>
+                    <td class="net-total-red" id="totalCab">0</td>
+                    <td class="net-total-red" id="totalBo">0</td>
+                    <td class="net-total-red" id="totalBal">0</td>
+                    <td class="net-total-red" id="totalBilling">0</td>
+                    <td class="net-total-red" id="totalColln">0</td>
+                    <td class="net-total-red" id="totalRem">0</td>
+                    <td class="net-total-red"></td>
                 </tr>
-
             </tbody>
-
         </table>
-
     </div>
 
-
-    <!-- =========================================================
-         THIRD TABLE
-         ========================================================= -->
-
-    <div class="table-box table-box-3">
-
+    <!-- THIRD TABLE -->
+    <div class="table-box">
         <table>
-
-            <colgroup>
-                <col style="width:20%;">
-                <col style="width:15%;">
-                <col style="width:20%;">
-                <col style="width:15%;">
-                <col style="width:30%;">
-            </colgroup>
-
-
+            <colgroup><col style="width:20%;"><col style="width:15%;"><col style="width:20%;"><col style="width:15%;"><col style="width:30%;"></colgroup>
             <tbody>
-
-                <!-- ROW 1 -->
-
                 <tr>
-
-                    <th>
-                        ITEMS
-                    </th>
-
-                    <th>
-                        AMOUNT
-                    </th>
-
-                    <th>
-                        ITEMS
-                    </th>
-
-                    <th>
-                        AMOUNT
-                    </th>
-
-                    <td rowspan="2"
-                        class="third-summary-cell collection-summary-cell">
-
-                        <div class="summary-label">
-                            Collection - Expenses
-                        </div>
-
-                        <div id="collectionPlusExtra">
-                            0
-                        </div>
-
+                    <th>ITEMS</th><th>AMOUNT</th><th>ITEMS</th><th>AMOUNT</th>
+                    <td rowspan="2" class="third-summary-cell collection-summary-cell">
+                        <div class="summary-label">Collection - Expenses</div>
+                        <div id="collectionPlusExtra">0</div>
                     </td>
-
                 </tr>
-
-
-                <!-- ROW 2 -->
-
                 <tr>
-
-                    <td>
-
-                        <input type="text"
-                               id="extraItem_1"
-                               class="extra-item-input"
-                               inputmode="text"
-                               oninput="calculateExtraTable(); saveLedger();">
-
-                    </td>
-
-                    <td>
-
-                        <input type="number"
-                               id="extraAmount_1"
-                               class="extra-amount-input"
-                               min="0"
-                               step="any"
-                               inputmode="decimal"
-                               oninput="calculateExtraTable(); saveLedger();">
-
-                    </td>
-
-                    <td>
-
-                        <input type="text"
-                               id="extraItem_2"
-                               class="extra-item-input"
-                               inputmode="text"
-                               oninput="calculateExtraTable(); saveLedger();">
-
-                    </td>
-
-                    <td>
-
-                        <input type="number"
-                               id="extraAmount_2"
-                               class="extra-amount-input"
-                               min="0"
-                               step="any"
-                               inputmode="decimal"
-                               oninput="calculateExtraTable(); saveLedger();">
-
-                    </td>
-
+                    <td><input type="text" id="extraItem_1" class="extra-item-input" oninput="calculateExtraTable(); saveLedger();"></td>
+                    <td><input type="number" id="extraAmount_1" class="extra-amount-input" min="0" step="any" oninput="calculateExtraTable(); saveLedger();"></td>
+                    <td><input type="text" id="extraItem_2" class="extra-item-input" oninput="calculateExtraTable(); saveLedger();"></td>
+                    <td><input type="number" id="extraAmount_2" class="extra-amount-input" min="0" step="any" oninput="calculateExtraTable(); saveLedger();"></td>
                 </tr>
-
-
-                <!-- ROW 3 -->
-
                 <tr>
-
-                    <td>
-
-                        <input type="text"
-                               id="extraItem_3"
-                               class="extra-item-input"
-                               inputmode="text"
-                               oninput="calculateExtraTable(); saveLedger();">
-
+                    <td><input type="text" id="extraItem_3" class="extra-item-input" oninput="calculateExtraTable(); saveLedger();"></td>
+                    <td><input type="number" id="extraAmount_3" class="extra-amount-input" min="0" step="any" oninput="calculateExtraTable(); saveLedger();"></td>
+                    <td><input type="text" id="extraItem_4" class="extra-item-input" oninput="calculateExtraTable(); saveLedger();"></td>
+                    <td><input type="number" id="extraAmount_4" class="extra-amount-input" min="0" step="any" oninput="calculateExtraTable(); saveLedger();"></td>
+                    <td rowspan="2" class="third-summary-cell coh-cell">
+                        <div class="summary-label">COH</div>
+                        <input type="number" id="inputCOH" min="0" step="any" value="0" oninput="calculateExtraTable(); saveLedger();">
                     </td>
-
-                    <td>
-
-                        <input type="number"
-                               id="extraAmount_3"
-                               class="extra-amount-input"
-                               min="0"
-                               step="any"
-                               inputmode="decimal"
-                               oninput="calculateExtraTable(); saveLedger();">
-
-                    </td>
-
-                    <td>
-
-                        <input type="text"
-                               id="extraItem_4"
-                               class="extra-item-input"
-                               inputmode="text"
-                               oninput="calculateExtraTable(); saveLedger();">
-
-                    </td>
-
-                    <td>
-
-                        <input type="number"
-                               id="extraAmount_4"
-                               class="extra-amount-input"
-                               min="0"
-                               step="any"
-                               inputmode="decimal"
-                               oninput="calculateExtraTable(); saveLedger();">
-
-                    </td>
-
-                    <td rowspan="2"
-                        class="third-summary-cell coh-cell">
-
-                        <div class="summary-label">
-                            COH
-                        </div>
-
-                        <input type="number"
-                               id="inputCOH"
-                               min="0"
-                               step="any"
-                               inputmode="decimal"
-                               value="0"
-                               oninput="calculateExtraTable(); saveLedger();">
-
-                    </td>
-
                 </tr>
-
-
-                <!-- ROW 4 -->
-
                 <tr>
-
-                    <td>
-
-                        <input type="text"
-                               id="extraItem_5"
-                               class="extra-item-input"
-                               inputmode="text"
-                               oninput="calculateExtraTable(); saveLedger();">
-
-                    </td>
-
-                    <td>
-
-                        <input type="number"
-                               id="extraAmount_5"
-                               class="extra-amount-input"
-                               min="0"
-                               step="any"
-                               inputmode="decimal"
-                               oninput="calculateExtraTable(); saveLedger();">
-
-                    </td>
-
-                    <td>
-
-                        <input type="text"
-                               id="extraItem_6"
-                               class="extra-item-input"
-                               inputmode="text"
-                               oninput="calculateExtraTable(); saveLedger();">
-
-                    </td>
-
-                    <td>
-
-                        <input type="number"
-                               id="extraAmount_6"
-                               class="extra-amount-input"
-                               min="0"
-                               step="any"
-                               inputmode="decimal"
-                               oninput="calculateExtraTable(); saveLedger();">
-
-                    </td>
-
+                    <td><input type="text" id="extraItem_5" class="extra-item-input" oninput="calculateExtraTable(); saveLedger();"></td>
+                    <td><input type="number" id="extraAmount_5" class="extra-amount-input" min="0" step="any" oninput="calculateExtraTable(); saveLedger();"></td>
+                    <td><input type="text" id="extraItem_6" class="extra-item-input" oninput="calculateExtraTable(); saveLedger();"></td>
+                    <td><input type="number" id="extraAmount_6" class="extra-amount-input" min="0" step="any" oninput="calculateExtraTable(); saveLedger();"></td>
                 </tr>
-
-
-                <!-- ROW 5 -->
-
                 <tr>
-
-                    <td>
-
-                        <input type="text"
-                               id="extraItem_7"
-                               class="extra-item-input"
-                               inputmode="text"
-                               oninput="calculateExtraTable(); saveLedger();">
-
+                    <td><input type="text" id="extraItem_7" class="extra-item-input" oninput="calculateExtraTable(); saveLedger();"></td>
+                    <td><input type="number" id="extraAmount_7" class="extra-amount-input" min="0" step="any" oninput="calculateExtraTable(); saveLedger();"></td>
+                    <td><input type="text" id="extraItem_8" class="extra-item-input" oninput="calculateExtraTable(); saveLedger();"></td>
+                    <td><input type="number" id="extraAmount_8" class="extra-amount-input" min="0" step="any" oninput="calculateExtraTable(); saveLedger();"></td>
+                    <td rowspan="2" class="third-summary-cell grand-total-cell">
+                        <div class="summary-label">GRAND TOTAL</div>
+                        <div id="grandTotalAmount">0</div>
                     </td>
-
-                    <td>
-
-                        <input type="number"
-                               id="extraAmount_7"
-                               class="extra-amount-input"
-                               min="0"
-                               step="any"
-                               inputmode="decimal"
-                               oninput="calculateExtraTable(); saveLedger();">
-
-                    </td>
-
-                    <td>
-
-                        <input type="text"
-                               id="extraItem_8"
-                               class="extra-item-input"
-                               inputmode="text"
-                               oninput="calculateExtraTable(); saveLedger();">
-
-                    </td>
-
-                    <td>
-
-                        <input type="number"
-                               id="extraAmount_8"
-                               class="extra-amount-input"
-                               min="0"
-                               step="any"
-                               inputmode="decimal"
-                               oninput="calculateExtraTable(); saveLedger();">
-
-                    </td>
-
-                    <td rowspan="2"
-                        class="third-summary-cell grand-total-cell">
-
-                        <div class="summary-label">
-                            GRAND TOTAL
-                        </div>
-
-                        <div id="grandTotalAmount">
-                            0
-                        </div>
-
-                    </td>
-
                 </tr>
-
-
-                <!-- ROW 6 -->
-
                 <tr>
-
-                    <td class="extra-total-label">
-                        TOTAL
-                    </td>
-
-                    <td class="extra-total-amount"
-                        id="extraColumn2Total">
-                        0
-                    </td>
-
-                    <td class="extra-total-label">
-                        TOTAL
-                    </td>
-
-                    <td class="extra-total-amount"
-                        id="extraColumn4Total">
-                        0
-                    </td>
-
+                    <td class="extra-total-label">TOTAL</td>
+                    <td class="extra-total-amount" id="extraColumn2Total">0</td>
+                    <td class="extra-total-label">TOTAL</td>
+                    <td class="extra-total-amount" id="extraColumn4Total">0</td>
                 </tr>
-
             </tbody>
-
         </table>
-
     </div>
 
-
-    <!-- =========================================================
-         NOTE BAR
-         ========================================================= -->
-
-    <div id="newTableNoteBar"
-         class="note-bar">
-
-        <input
-            type="text"
-            id="newTableNote"
-            placeholder="NOTE"
-            autocomplete="off"
-            oninput="saveLedger();">
-
+    <!-- NOTE BAR -->
+    <div class="note-bar">
+        <input type="text" id="newTableNote" placeholder="NOTE" autocomplete="off" oninput="saveLedger();">
     </div>
 
-
-    <!-- =========================================================
-         30-DAY HISTORY ARCHIVE
-         ========================================================= -->
-
-    <div class="history-section"
-         id="savedFilesSection">
-
+    <!-- 30-DAY HISTORY ARCHIVE -->
+    <div class="history-section">
         <div class="history-title">
-
-            <span>
-                Saved Files
-            </span>
-
-            <span id="historyCount"
-                  style="
-                      font-weight:normal;
-                      color:#6b7280;
-                      font-size:11px;
-                  ">
-                0 / 30
-            </span>
-
+            <span>Saved Files</span>
+            <span id="historyCount" style="font-weight:normal;color:#6b7280;font-size:11px;">0 / 30</span>
         </div>
-
-
-        <div class="history-list"
-             id="historyContainer">
-
-            <p style="
-                color:#9ca3af;
-                text-align:center;
-                margin:10px 0;
-            ">
-                No saved files yet.
-            </p>
-
+        <div class="history-list" id="historyContainer">
+            <p style="color:#9ca3af;text-align:center;margin:10px 0;">No saved files yet.</p>
         </div>
-
     </div>
 
 </div>
 
+<script>
+// ==========================================
+// RAWBT THERMAL PRINTER INTEGRATION (58mm)
+// ==========================================
+function printRowReceipt(rowNum) {
+    const nameInput = document.getElementById(`ledgerName_${rowNum}`);
+    const customerName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : `Customer ${rowNum}`;
+    
+    const dry = parseFloat(document.getElementById(`ledgerDry_${rowNum}`).value) || 0;
+    const fresh = parseFloat(document.getElementById(`ledgerFresh_${rowNum}`).value) || 0;
+    const cab = parseFloat(document.getElementById(`ledgerCab_${rowNum}`).value) || 0;
+    const bo = parseFloat(document.getElementById(`ledgerBo_${rowNum}`).value) || 0;
+    const bal = parseFloat(document.getElementById(`ledgerBal_${rowNum}`).value) || 0;
+    const billing = parseFloat(document.getElementById(`ledgerBilling_${rowNum}`).value) || 0;
+    const payment = parseFloat(document.getElementById(`ledgerPay_${rowNum}`).value) || 0;
+    const utang = parseFloat(document.getElementById(`ledgerRem_${rowNum}`).value) || 0;
 
-<script src="script.js"></script>
+    const dateVal = document.getElementById("displayFileDate") ? document.getElementById("displayFileDate").innerText : "TODAY";
+    const routeName = document.getElementById("displayFileName") ? document.getElementById("displayFileName").innerText : "Paul";
 
+    let receiptText = 
+`================================
+       MIKI TABLE & LEDGER      
+================================
+Date: ${dateVal}
+Route: ${routeName}
+Customer: ${customerName}
+--------------------------------
+ITEM       QTY    
+--------------------------------
+DRY        ${String(dry).padEnd(5)}              
+FRESH      ${String(fresh).padEnd(5)}              
+CAB        ${String(cab).padEnd(5)}              
+BO         ${String(bo).padEnd(5)}              
+--------------------------------
+BILLING:              P ${String(billing.toFixed(2)).padStart(7)}
+PREV BAL:             P ${String(bal.toFixed(2)).padStart(7)}
+--------------------------------
+GRAND TOTAL:          P ${String((billing + bal).toFixed(2)).padStart(7)}
+COLLECTION (PAID):    P ${String(payment.toFixed(2)).padStart(7)}
+--------------------------------
+REMAINING UTANG:      P ${String(utang.toFixed(2)).padStart(7)}
+================================
+    Salamat sa Pagtangkilik!
+================================\n\n\n`;
+
+    const S = encodeURIComponent(receiptText);
+    window.location.href = `intent:${S}#Intent;scheme=rawbt;package=ru.a404.rawbtprinter;end;`;
+}
+
+// (I-dagdag dito ang iba pang JavaScript functions ng iyong app tulad ng calculateMain, saveLedger, etc.)
+</script>
 </body>
 </html>

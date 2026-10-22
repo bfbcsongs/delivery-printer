@@ -1196,7 +1196,7 @@ function printActiveRowReceipt() {
 }
 
 // ==========================================
-// DIRECT WEB BLUETOOTH PRINTER INTEGRATION
+// DIRECT WEB BLUETOOTH PRINTER INTEGRATION (FIXED ORDER)
 // ==========================================
 async function printRowReceipt(rowNum) {
     const sessionDate = currentSessionDate || new Date().toISOString().split('T')[0];
@@ -1263,6 +1263,7 @@ Time: ${timeVal}
 Route: ${routeName}
 Customer: ${customerName}
 Print Copy #${currentCount}
+*** ${copyTitle} ***
 --------------------------------
 ITEM      QTY             AMOUNT
 --------------------------------

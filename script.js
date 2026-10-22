@@ -1204,7 +1204,7 @@ function loadLedger() {
 }
 
 // ==========================================
-// RAWBT THERMAL PRINTER INTEGRATION (METHOD 2)
+// RAWBT THERMAL PRINTER INTEGRATION (STABLE)
 // ==========================================
 function printRowReceipt(rowNum) {
     const nameInput = document.getElementById(`ledgerName_${rowNum}`);
@@ -1254,19 +1254,7 @@ REMAINING UTANG:      P ${String(utang.toFixed(2)).padStart(7)}
     Salamat sa Pagtangkilik!
 ================================\n\n\n`;
 
-    // Direct Intent Link Generator via Dynamic Anchor Tag
-    const intentUrl = `intent:${encodeURIComponent(receiptText)}#Intent;scheme=rawbt;package=ru.a404.rawbtprinter;end;`;
-    
-    const a = document.createElement("a");
-    a.href = intentUrl;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    // Direct rawbt: base scheme na walang Play Store error
+    const rawbtUrl = "rawbt:base64," + btoa(unescape(encodeURIComponent(receiptText)));
+    window.location.href = rawbtUrl;
 }
-
-
-// ============================================================
-// START APP
-// ============================================================
-
-window.onload = loadLedger;

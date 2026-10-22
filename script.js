@@ -1264,10 +1264,10 @@ ESC_ALIGN_LEFT +
 "--------------------------------\n" +
 "ITEM      QTY             AMOUNT\n" +
 "--------------------------------\n" +
-"DRY       " + String(dry).padEnd(5) + "    P " + String(dryAmt.toFixed(2)).padStart(8) + "\n" +
-"FRESH     " + String(fresh).padEnd(5) + "    P " + String(freshAmt.toFixed(2)).padStart(8) + "\n" +
-"CAB       " + String(cab).padEnd(5) + "    P " + String(cabAmt.toFixed(2)).padStart(8) + "\n" +
-"BO        " + String(bo).padEnd(5) + "    P " + String(boAmt.toFixed(2)).padStart(8) + "\n" +
+"DRY         " + String(dry).padEnd(5) + "    P " + String(dryAmt.toFixed(2)).padStart(8) + "\n" +
+"FRESH       " + String(fresh).padEnd(5) + "    P " + String(freshAmt.toFixed(2)).padStart(8) + "\n" +
+"CAB         " + String(cab).padEnd(5) + "    P " + String(cabAmt.toFixed(2)).padStart(8) + "\n" +
+"BO          " + String(bo).padEnd(5) + "    P " + String(boAmt.toFixed(2)).padStart(8) + "\n" +
 "--------------------------------\n" +
 "BILLING:             P " + String(billing.toFixed(2)).padStart(8) + "\n" +
 "PREVIOUS BAL:        P " + String(bal.toFixed(2)).padStart(8) + "\n" +
@@ -1279,7 +1279,8 @@ ESC_ALIGN_LEFT +
 "================================\n" +
 ESC_ALIGN_CENTER +
 "  Salamat po sa Pagtangkilik!  \n" +
-"================================\n\n\n\n";
+"================================\n\n\n\n\n\n";
+
 
     await sendToPrinter(singleReceiptText);
 }

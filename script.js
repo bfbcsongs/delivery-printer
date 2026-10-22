@@ -1279,7 +1279,7 @@ ESC_ALIGN_LEFT +
 "================================\n" +
 ESC_ALIGN_CENTER +
 "  Salamat po sa Pagtangkilik!  \n" +
-"================================\n\n\n\n\n\n";
+"================================\n\n\n\n\n";
 
 
     await sendToPrinter(singleReceiptText);

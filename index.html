@@ -31,15 +31,13 @@
             System date is automatically set to today. Please enter Salesman/Route name.
         </p>
 
-        <!-- WALA NANG DATE INPUT BOX DITO -->
-
         <label for="modalNameInput">
             Route / Salesman Name
         </label>
 
         <input type="text"
                id="modalNameInput"
-               placeholder="ana nagan mo boy">
+               placeholder="Enter Salesman / Route">
 
         <button id="modalActionBtn"
                 class="setup-btn"
@@ -403,6 +401,10 @@
 
 
             <div class="btn-container">
+
+                <button id="connectPrinterBtn" class="action-btn" onclick="connectBluetoothPrinter()" style="background-color: #059669; color: white; font-weight: bold;">
+                    PAIR PRINTER
+                </button>
 
                 <button id="installBtn"
                         class="action-btn install-btn"

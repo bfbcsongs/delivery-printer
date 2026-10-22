@@ -469,8 +469,8 @@
     </div>
 
 
-    <!-- =========================================================
-         SECOND TABLE / CUSTOMER LIST
+        <!-- =========================================================
+         SECOND TABLE / CUSTOMER LIST (50 ROWS & VIEW SWITCHER)
          ========================================================= -->
 
     <div class="table-box table-box-2 customer-list-watermark">
@@ -480,248 +480,255 @@
             --
         </div>
 
+        <!-- Long Press Button Switcher -->
+        <div class="switch-container" style="text-align: center; margin-bottom: 10px;">
+            <button id="viewToggleBtn" class="btn-toggle-view" style="background-color: #2563eb;">
+                📋 VIEW: CUSTOMERS TABLE (Hold 3s to Switch)
+            </button>
+        </div>
 
-        <table>
+        <!-- Scrollable Table Container -->
+        <div class="table-scroll-container">
+            <table>
 
-            <colgroup>
-                <col style="width:14%;">
-                <col style="width:8%;">
-                <col style="width:8%;">
-                <col style="width:8%;">
-                <col style="width:8%;">
-                <col style="width:14%;">
-                <col style="width:14%;">
-                <col style="width:14%;">
-                <col style="width:12%;">
-            </colgroup>
+                <colgroup>
+                    <col style="width:14%;">
+                    <col style="width:8%;">
+                    <col style="width:8%;">
+                    <col style="width:8%;">
+                    <col style="width:8%;">
+                    <col style="width:14%;">
+                    <col style="width:14%;">
+                    <col style="width:14%;">
+                    <col style="width:12%;">
+                </colgroup>
 
 
-            <thead>
+                <thead>
 
-                <tr>
+                    <tr>
 
-                    <th id="lockHeader"
-                        class="lockable-header"
-                        onclick="handleKeyClick()"
-                        title="Tap 5 times to Lock/Unlock">
-                        🔒
-                    </th>
+                        <th id="lockHeader"
+                            class="lockable-header"
+                            onclick="handleKeyClick()"
+                            title="Tap 5 times to Lock/Unlock">
+                            🔒
+                        </th>
 
-                    <th>
-                        Dry
-                    </th>
+                        <th>
+                            Dry
+                        </th>
 
-                    <th>
-                        Fresh
-                    </th>
+                        <th>
+                            Fresh
+                        </th>
 
-                    <th>
-                        Cab
-                    </th>
+                        <th>
+                            Cab
+                        </th>
 
-                    <th>
-                        BO
-                    </th>
+                        <th>
+                            BO
+                        </th>
 
-                    <th>
-                        Bal
-                    </th>
+                        <th>
+                            Bal
+                        </th>
 
-                    <th>
-                        Billing
-                    </th>
+                        <th>
+                            Billing
+                        </th>
 
-                    <th class="colln-header">
-                        Coll'n
-                    </th>
+                        <th class="colln-header">
+                            Coll'n
+                        </th>
 
-                    <th>
-                        Utang
-                    </th>
+                        <th>
+                            Utang
+                        </th>
 
-                </tr>
+                    </tr>
 
-            </thead>
+                </thead>
 
 
-            <tbody>
+                <tbody>
 
-                <script>
+                    <script>
 
-                    for (let i = 1; i <= 16; i++) {
+                        for (let i = 1; i <= 50; i++) {
 
-                        document.write(`
+                            document.write(`
 
-                            <tr>
+                                <tr>
 
-                                <td>
+                                    <td>
 
-                                    <input type="text"
-                                           class="name-input"
-                                           id="ledgerName_${i}"
-                                           oninput="updateActiveCustomerName(${i}); saveLedger();"
-                                           onfocus="loadRowToMain(${i})"
-                                           readonly
-                                           style="background-color:#e5e7eb;">
+                                        <input type="text"
+                                               class="name-input"
+                                               id="ledgerName_${i}"
+                                               oninput="updateActiveCustomerName(${i}); saveLedger();"
+                                               onfocus="loadRowToMain(${i})"
+                                               readonly
+                                               style="background-color:#e5e7eb;">
 
-                                </td>
+                                    </td>
 
 
-                                <td>
+                                    <td>
 
-                                    <input type="text"
-                                           class="readonly-col"
-                                           id="ledgerDry_${i}"
-                                           readonly
-                                           onfocus="loadRowToMain(${i})">
+                                        <input type="text"
+                                               class="readonly-col"
+                                               id="ledgerDry_${i}"
+                                               readonly
+                                               onfocus="loadRowToMain(${i})">
 
-                                </td>
+                                    </td>
 
 
-                                <td>
+                                    <td>
 
-                                    <input type="text"
-                                           class="readonly-col"
-                                           id="ledgerFresh_${i}"
-                                           readonly
-                                           onfocus="loadRowToMain(${i})">
+                                        <input type="text"
+                                               class="readonly-col"
+                                               id="ledgerFresh_${i}"
+                                               readonly
+                                               onfocus="loadRowToMain(${i})">
 
-                                </td>
+                                    </td>
 
 
-                                <td>
+                                    <td>
 
-                                    <input type="text"
-                                           class="readonly-col"
-                                           id="ledgerCab_${i}"
-                                           readonly
-                                           onfocus="loadRowToMain(${i})">
+                                        <input type="text"
+                                               class="readonly-col"
+                                               id="ledgerCab_${i}"
+                                               readonly
+                                               onfocus="loadRowToMain(${i})">
 
-                                </td>
+                                    </td>
 
 
-                                <td>
+                                    <td>
 
-                                    <input type="text"
-                                           class="readonly-col"
-                                           id="ledgerBo_${i}"
-                                           readonly
-                                           onfocus="loadRowToMain(${i})">
+                                        <input type="text"
+                                               class="readonly-col"
+                                               id="ledgerBo_${i}"
+                                               readonly
+                                               onfocus="loadRowToMain(${i})">
 
-                                </td>
+                                    </td>
 
 
-                                <td>
+                                    <td>
 
-                                    <input type="text"
-                                           class="readonly-col"
-                                           id="ledgerBal_${i}"
-                                           readonly
-                                           onfocus="loadRowToMain(${i})">
+                                        <input type="text"
+                                               class="readonly-col"
+                                               id="ledgerBal_${i}"
+                                               readonly
+                                               onfocus="loadRowToMain(${i})">
 
-                                </td>
+                                    </td>
 
 
-                                <td>
+                                    <td>
 
-                                    <input type="text"
-                                           class="readonly-col amount"
-                                           id="ledgerBilling_${i}"
-                                           readonly>
+                                        <input type="text"
+                                               class="readonly-col amount"
+                                               id="ledgerBilling_${i}"
+                                               readonly>
 
-                                </td>
+                                    </td>
 
 
-                                <td>
+                                    <td>
 
-                                    <input type="text"
-                                           class="readonly-col colln-input"
-                                           id="ledgerPay_${i}"
-                                           readonly
-                                           onclick="handleRowCollTap(${i})"
-                                           onfocus="loadRowToMain(${i})">
+                                        <input type="text"
+                                               class="readonly-col colln-input"
+                                               id="ledgerPay_${i}"
+                                               readonly
+                                               onclick="handleRowCollTap(${i})"
+                                               onfocus="loadRowToMain(${i})">
 
-                                </td>
+                                    </td>
 
 
-                                <td>
+                                    <td>
 
-                                    <input type="text"
-                                           class="readonly-col amount"
-                                           id="ledgerRem_${i}"
-                                           readonly>
+                                        <input type="text"
+                                               class="readonly-col amount"
+                                               id="ledgerRem_${i}"
+                                               readonly>
 
-                                </td>
+                                    </td>
 
-                            </tr>
+                                </tr>
 
-                        `);
+                            `);
 
-                    }
+                        }
 
-                </script>
+                    </script>
 
 
-                <tr>
+                    <tr>
 
-                    <td class="miki"
-                        style="
-                            color:#dc2626;
-                            font-size:9px;
-                            padding:0 1px;
-                        ">
-                        NET TOTAL
-                    </td>
+                        <td class="miki"
+                            style="
+                                color:#dc2626;
+                                font-size:9px;
+                                padding:0 1px;
+                            ">
+                            NET TOTAL
+                        </td>
 
-                    <td class="net-total-red"
-                        id="totalDry">
-                        0
-                    </td>
+                        <td class="net-total-red"
+                            id="totalDry">
+                            0
+                        </td>
 
-                    <td class="net-total-red"
-                        id="totalFresh">
-                        0
-                    </td>
+                        <td class="net-total-red"
+                            id="totalFresh">
+                            0
+                        </td>
 
-                    <td class="net-total-red"
-                        id="totalCab">
-                        0
-                    </td>
+                        <td class="net-total-red"
+                            id="totalCab">
+                            0
+                        </td>
 
-                    <td class="net-total-red"
-                        id="totalBo">
-                        0
-                    </td>
+                        <td class="net-total-red"
+                            id="totalBo">
+                            0
+                        </td>
 
-                    <td class="net-total-red"
-                        id="totalBal">
-                        0
-                    </td>
+                        <td class="net-total-red"
+                            id="totalBal">
+                            0
+                        </td>
 
-                    <td class="net-total-red"
-                        id="totalBilling">
-                        0
-                    </td>
+                        <td class="net-total-red"
+                            id="totalBilling">
+                            0
+                        </td>
 
-                    <td class="net-total-red"
-                        id="totalColln">
-                        0
-                    </td>
+                        <td class="net-total-red"
+                            id="totalColln">
+                            0
+                        </td>
 
-                    <td class="net-total-red"
-                        id="totalRem">
-                        0
-                    </td>
+                        <td class="net-total-red"
+                            id="totalRem">
+                            0
+                        </td>
 
-                </tr>
+                    </tr>
 
-            </tbody>
+                </tbody>
 
-        </table>
+            </table>
+        </div>
 
     </div>
-
-
     <!-- =========================================================
          THIRD TABLE
          ========================================================= -->

@@ -1136,7 +1136,7 @@ function printActiveRowReceipt() {
 }
 
 // ==========================================
-// RAWBT PRINTER INTEGRATION (2 COPIES ALWAYS: CUSTOMER & DUPLICATE)
+// RAWBT THERMAL PRINTER INTEGRATION (SPACED & CLEAN FONT)
 // ==========================================
 function printRowReceipt(rowNum) {
     const sessionDate = currentSessionDate || new Date().toISOString().split('T')[0];
@@ -1146,7 +1146,6 @@ function printRowReceipt(rowNum) {
     currentCount += 1;
     localStorage.setItem(storageKey, currentCount.toString());
 
-    // STRICT RECORDING: I-save lang ang ledger file kapag NAGPRINT
     saveLedger();
     forceSaveCurrentDay();
 
@@ -1186,10 +1185,14 @@ function printRowReceipt(rowNum) {
     const now = new Date();
     const timeVal = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
-    // TEMPLATE GENERATOR FUNCTION FOR COPIES
+    // ESC/POS Commands: \x1B\x21\x00 (Font A Normal)
+    const initPrinter = "\x1B\x40"; // Reset printer
+    const fontNormal = "\x1B\x21\x00"; // Normal Font A (Clear & Spaced)
+
     function generateReceiptBody(copyTitle) {
-        return `================================
-          Blessed Day po     
+        return `${initPrinter}${fontNormal}` +
+`================================
+         Blessed Day po         
 ================================
 Date: ${dateVal}
 Time: ${timeVal}
@@ -1198,26 +1201,25 @@ Customer: ${customerName}
 Print Copy #${currentCount}
 *** ${copyTitle} ***
 --------------------------------
-ITEM       QTY            AMOUNT
+ITEM      QTY             AMOUNT
 --------------------------------
-DRY        ${String(dry).padEnd(6)}     P ${String(dryAmt.toFixed(2)).padStart(8)}
-FRESH      ${String(fresh).padEnd(6)}     P ${String(freshAmt.toFixed(2)).padStart(8)}
-CAB        ${String(cab).padEnd(6)}     P ${String(cabAmt.toFixed(2)).padStart(8)}
-BO         ${String(bo).padEnd(6)}     P ${String(boAmt.toFixed(2)).padStart(8)}
+DRY       ${String(dry).padEnd(5)}    P ${String(dryAmt.toFixed(2)).padStart(8)}
+FRESH     ${String(fresh).padEnd(5)}    P ${String(freshAmt.toFixed(2)).padStart(8)}
+CAB       ${String(cab).padEnd(5)}    P ${String(cabAmt.toFixed(2)).padStart(8)}
+BO        ${String(bo).padEnd(5)}    P ${String(boAmt.toFixed(2)).padStart(8)}
 --------------------------------
-BILLING:              P ${String(billing.toFixed(2)).padStart(8)}
-PREVIOUS BAL:         P ${String(bal.toFixed(8)).padStart(8)}
+BILLING:             P ${String(billing.toFixed(2)).padStart(8)}
+PREVIOUS BAL:        P ${String(bal.toFixed(2)).padStart(8)}
 --------------------------------
-GRAND TOTAL:          P ${String(grandTotal.toFixed(2)).padStart(8)}
-Payment:              P ${String(payment.toFixed(2)).padStart(8)}
+GRAND TOTAL:         P ${String(grandTotal.toFixed(2)).padStart(8)}
+Payment:             P ${String(payment.toFixed(2)).padStart(8)}
 --------------------------------
-Balance:              P ${String(utang.toFixed(2)).padStart(8)}
+Balance:             P ${String(utang.toFixed(2)).padStart(8)}
 ================================
-   Salamat po sa Pagtangkilik!
+  Salamat po sa Pagtangkilik!  
 ================================\n\n\n`;
     }
 
-    // AWAUTOMATIKONG 2 COPIES: CUSTOMER'S COPY + DUPLICATE COPY
     const copy1 = generateReceiptBody("CUSTOMER'S COPY");
     const copy2 = generateReceiptBody("DUPLICATE COPY");
 

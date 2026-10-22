@@ -255,11 +255,21 @@
 
                 <tr>
 
-                    <td colspan="2"
-                        rowspan="2"
-                        id="activeCustomerDisplay"
-                        class="active-customer-box">
-                        Row 1
+                    <!-- DITO NATIN NILAGAY ANG MAGKAHATING CUSTOMER NAME AT MALAKING PRINT BUTTON -->
+                    <td colspan="2" rowspan="2" style="padding: 0; vertical-align: middle; background-color: #eff6ff;">
+                        <div style="display: flex; height: 100%; min-height: 70px; align-items: center; border: 1px solid #bfdbfe;">
+                            
+                            <!-- KALIWA: Customer Name Display -->
+                            <div id="activeCustomerDisplay" style="flex: 1; font-size: 20px; font-weight: bold; color: #1d4ed8; text-align: center; padding: 5px;">
+                                Row 1
+                            </div>
+                            
+                            <!-- KANAN: Malaking Print Button -->
+                            <button id="mainPrintBtn" type="button" onclick="printActiveRowReceipt()" style="flex: 1; height: 100%; min-height: 70px; background-color: #2563eb; color: white; font-size: 18px; font-weight: bold; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 5px rgba(0,0,0,0.2);">
+                                🛈 PRINT
+                            </button>
+
+                        </div>
                     </td>
 
                     <td class="label-cell">
@@ -395,7 +405,7 @@
                        min="0"
                        step="any"
                        inputmode="decimal"
-                       oninput="syncFromPanel('Bo')">
+                       oninput="syncFromPanel('BO')">
 
             </div>
 
@@ -466,7 +476,7 @@
 
 
     <!-- =========================================================
-         SECOND TABLE / CUSTOMER LIST
+         SECOND TABLE / CUSTOMER LIST (WALA NA ANG PRINT COLUMN)
          ========================================================= -->
 
     <div class="table-box table-box-2 customer-list-watermark">
@@ -481,16 +491,15 @@
         <table>
 
             <colgroup>
+                <col style="width:14%;">
+                <col style="width:8%;">
+                <col style="width:8%;">
+                <col style="width:8%;">
+                <col style="width:8%;">
+                <col style="width:14%;">
+                <col style="width:14%;">
+                <col style="width:14%;">
                 <col style="width:12%;">
-                <col style="width:7%;">
-                <col style="width:7%;">
-                <col style="width:7%;">
-                <col style="width:7%;">
-                <col style="width:13%;">
-                <col style="width:13%;">
-                <col style="width:13%;">
-                <col style="width:12%;">
-                <col style="width:9%;">
             </colgroup>
 
 
@@ -535,10 +544,6 @@
 
                     <th>
                         Utang
-                    </th>
-
-                    <th>
-                        Print
                     </th>
 
                 </tr>
@@ -655,14 +660,6 @@
 
                                 </td>
 
-                                <td style="text-align:center; padding:1px;">
-                                    <button type="button" 
-                                            onclick="printRowReceipt(${i})" 
-                                            style="background:#2563eb;color:#fff;font-size:8px;font-weight:900;padding:4px 2px;border:0;border-radius:3px;width:95%;">
-                                        PRINT
-                                    </button>
-                                </td>
-
                             </tr>
 
                         `);
@@ -722,8 +719,6 @@
                         id="totalRem">
                         0
                     </td>
-
-                    <td class="net-total-red"></td>
 
                 </tr>
 

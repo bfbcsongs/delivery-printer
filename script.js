@@ -1205,14 +1205,19 @@ function loadLedger() {
 }
 
 // ==========================================
-// RAWBT THERMAL PRINTER INTEGRATION (DATE-BASED COUNTER)
+// RAWBT THERMAL PRINTER INTEGRATION (GLOBAL DAILY CONTINUOUS COUNTER)
 // ==========================================
 function printRowReceipt(rowNum) {
     const sessionDate = currentSessionDate || new Date().toISOString().split('T')[0];
-    const storageKey = `miki_counter_${sessionDate}_row_${rowNum}`;
+    
+    // Global key na nakatali LANG sa petsa (walang rowNum o name)
+    const storageKey = `miki_counter_${sessionDate}_global`;
 
+    // Basahin ang kasalukuyang total prints ngayong araw
     let currentCount = parseInt(localStorage.getItem(storageKey)) || 0;
-    currentCount += 1;
+    currentCount += 1; // Dagdag 1 sa pangkalahatang bilang
+    
+    // I-save ang updated global print count
     localStorage.setItem(storageKey, currentCount.toString());
 
     saveLedger();

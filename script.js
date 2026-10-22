@@ -1254,8 +1254,6 @@ async function printRowReceipt(rowNum) {
 
     function generateReceiptBody(copyTitle) {
         return ESC_INIT + ESC_FONT_A + ESC_ALIGN_CENTER +
-    function generateReceiptBody(copyTitle) {
-        return ESC_INIT + ESC_FONT_A + ESC_ALIGN_CENTER +
 `================================
          Blessed Day po         
 ================================\n` +

@@ -1196,7 +1196,7 @@ function printActiveRowReceipt() {
 }
 
 // ==========================================
-// DIRECT WEB BLUETOOTH PRINTER INTEGRATION (FIXED ORDER)
+// DIRECT WEB BLUETOOTH PRINTER INTEGRATION (SINGLE COPY)
 // ==========================================
 async function printRowReceipt(rowNum) {
     const sessionDate = currentSessionDate || new Date().toISOString().split('T')[0];
@@ -1206,7 +1206,6 @@ async function printRowReceipt(rowNum) {
     currentCount += 1;
     localStorage.setItem(storageKey, currentCount.toString());
 
-    // STRICT RECORDING: Save on print action
     saveLedger();
     forceSaveCurrentDay();
 
@@ -1246,53 +1245,42 @@ async function printRowReceipt(rowNum) {
     const now = new Date();
     const timeVal = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
-    // ESC/POS Formatting Commands
-    const ESC_INIT = "\x1B\x40";          // Reset Printer
-    const ESC_ALIGN_CENTER = "\x1B\x61\x01"; // Center Alignment
-    const ESC_ALIGN_LEFT = "\x1B\x61\x00";   // Left Alignment
-    const ESC_FONT_A = "\x1B\x21\x00";       // Font A (Clean, Spaced & Clear)
+    const ESC_INIT = "\x1B\x40";
+    const ESC_ALIGN_CENTER = "\x1B\x61\x01";
+    const ESC_ALIGN_LEFT = "\x1B\x61\x00";
+    const ESC_FONT_A = "\x1B\x21\x00";
 
-    function generateReceiptBody(copyTitle) {
-        return ESC_INIT + ESC_FONT_A + ESC_ALIGN_CENTER +
-`================================
-         Blessed Day po         
-================================\n` +
+    const singleReceiptText = ESC_INIT + ESC_FONT_A + ESC_ALIGN_CENTER +
+"================================\n" +
+"         Blessed Day po         \n" +
+"================================\n" +
 ESC_ALIGN_LEFT +
-`Date: ${dateVal}
-Time: ${timeVal}
-Route: ${routeName}
-Customer: ${customerName}
-Print Copy #${currentCount}
-*** ${copyTitle} ***
---------------------------------
-ITEM      QTY             AMOUNT
---------------------------------
-DRY       ${String(dry).padEnd(5)}    P ${String(dryAmt.toFixed(2)).padStart(8)}
-FRESH     ${String(fresh).padEnd(5)}    P ${String(freshAmt.toFixed(2)).padStart(8)}
-CAB       ${String(cab).padEnd(5)}    P ${String(cabAmt.toFixed(2)).padStart(8)}
-BO        ${String(bo).padEnd(5)}    P ${String(boAmt.toFixed(2)).padStart(8)}
---------------------------------
-BILLING:             P ${String(billing.toFixed(2)).padStart(8)}
-PREVIOUS BAL:        P ${String(bal.toFixed(2)).padStart(8)}
---------------------------------
-GRAND TOTAL:         P ${String(grandTotal.toFixed(2)).padStart(8)}
-Payment:             P ${String(payment.toFixed(2)).padStart(8)}
---------------------------------
-Balance:             P ${String(utang.toFixed(2)).padStart(8)}
-================================\n` +
+"Date: " + dateVal + "\n" +
+"Time: " + timeVal + "\n" +
+"Route: " + routeName + "\n" +
+"Customer: " + customerName + "\n" +
+"Print Copy #" + currentCount + "\n" +
+"--------------------------------\n" +
+"ITEM      QTY             AMOUNT\n" +
+"--------------------------------\n" +
+"DRY       " + String(dry).padEnd(5) + "    P " + String(dryAmt.toFixed(2)).padStart(8) + "\n" +
+"FRESH     " + String(fresh).padEnd(5) + "    P " + String(freshAmt.toFixed(2)).padStart(8) + "\n" +
+"CAB       " + String(cab).padEnd(5) + "    P " + String(cabAmt.toFixed(2)).padStart(8) + "\n" +
+"BO        " + String(bo).padEnd(5) + "    P " + String(boAmt.toFixed(2)).padStart(8) + "\n" +
+"--------------------------------\n" +
+"BILLING:             P " + String(billing.toFixed(2)).padStart(8) + "\n" +
+"PREVIOUS BAL:        P " + String(bal.toFixed(2)).padStart(8) + "\n" +
+"--------------------------------\n" +
+"GRAND TOTAL:         P " + String(grandTotal.toFixed(2)).padStart(8) + "\n" +
+"Payment:             P " + String(payment.toFixed(2)).padStart(8) + "\n" +
+"--------------------------------\n" +
+"Balance:             P " + String(utang.toFixed(2)).padStart(8) + "\n" +
+"================================\n" +
 ESC_ALIGN_CENTER +
-`  Salamat po sa Pagtangkilik!  
-================================\n\n\n\n`;
-    }
+"  Salamat po sa Pagtangkilik!  \n" +
+"================================\n\n\n\n";
 
-    const copy1 = generateReceiptBody("CUSTOMER'S COPY");
-    const copy2 = generateReceiptBody("DUPLICATE COPY");
-
-    const fullText = copy1 + copy2;
-
-    // Direct Web Bluetooth Print Call
-    await sendToPrinter(fullText);
+    await sendToPrinter(singleReceiptText);
 }
 
-// Auto-initialize app on load
 window.addEventListener('DOMContentLoaded', loadLedger);

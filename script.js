@@ -1151,7 +1151,7 @@ function printActiveRowReceipt() {
 }
 
 // ==========================================
-// RAWBT THERMAL PRINTER INTEGRATION (GLOBAL DAILY COUNTER)
+// RAWBT THERMAL PRINTER INTEGRATION (WITH ITEM AMOUNTS & ALIGNED LAYOUT)
 // ==========================================
 function printRowReceipt(rowNum) {
     const sessionDate = currentSessionDate || new Date().toISOString().split('T')[0];
@@ -1167,11 +1167,24 @@ function printRowReceipt(rowNum) {
     const nameInput = document.getElementById(`ledgerName_${rowNum}`);
     const customerName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : `Customer ${rowNum}`;
     
+    // Kumuha ng Quantities
     const dry = parseFloat(document.getElementById(`ledgerDry_${rowNum}`).value) || 0;
     const fresh = parseFloat(document.getElementById(`ledgerFresh_${rowNum}`).value) || 0;
     const cab = parseFloat(document.getElementById(`ledgerCab_${rowNum}`).value) || 0;
     const bo = parseFloat(document.getElementById(`ledgerBo_${rowNum}`).value) || 0;
     const bal = parseFloat(document.getElementById(`ledgerBal_${rowNum}`).value) || 0;
+
+    // Kumuha ng Prices
+    const priceReg = parseFloat(document.getElementById("priceReg")?.value) || 50;
+    const priceFresh = parseFloat(document.getElementById("priceFresh")?.value) || 50;
+    const priceCab = parseFloat(document.getElementById("priceCab")?.value) || 40;
+    const priceBo = parseFloat(document.getElementById("priceBo")?.value) || 50;
+
+    // Compute Item Amounts
+    const dryAmt = dry * priceReg;
+    const freshAmt = fresh * priceFresh;
+    const cabAmt = cab * priceCab;
+    const boAmt = (bo / 2) * priceBo; // Half price deduction para sa BO
     
     const billingStr = document.getElementById(`ledgerBilling_${rowNum}`).value.replace(/,/g, '');
     const billing = parseFloat(billingStr) || 0;
@@ -1200,20 +1213,20 @@ Route: ${routeName}
 Customer: ${customerName}
 Print Copy #${currentCount}
 --------------------------------
-ITEM       QTY    
+ITEM       QTY            AMOUNT
 --------------------------------
-DRY        ${String(dry).padEnd(5)}              
-FRESH      ${String(fresh).padEnd(5)}              
-CAB        ${String(cab).padEnd(5)}              
-BO         ${String(bo).padEnd(5)}              
+DRY        ${String(dry).padEnd(6)}     P ${String(dryAmt.toFixed(2)).padStart(8)}
+FRESH      ${String(fresh).padEnd(6)}     P ${String(freshAmt.toFixed(2)).padStart(8)}
+CAB        ${String(cab).padEnd(6)}     P ${String(cabAmt.toFixed(2)).padStart(8)}
+BO         ${String(bo).padEnd(6)}     P ${String(boAmt.toFixed(2)).padStart(8)}
 --------------------------------
-BILLING:              P ${String(billing.toFixed(2)).padStart(7)}
-PREVIOUS BAL:         P ${String(bal.toFixed(2)).padStart(7)}
+BILLING:              P ${String(billing.toFixed(2)).padStart(8)}
+PREVIOUS BAL:         P ${String(bal.toFixed(2)).padStart(8)}
 --------------------------------
-GRAND TOTAL:          P ${String(grandTotal.toFixed(2)).padStart(7)}
-Payment:              P ${String(payment.toFixed(2)).padStart(7)}
+GRAND TOTAL:          P ${String(grandTotal.toFixed(2)).padStart(8)}
+Payment:              P ${String(payment.toFixed(2)).padStart(8)}
 --------------------------------
-Balance:              P ${String(utang.toFixed(2)).padStart(7)}
+Balance:              P ${String(utang.toFixed(2)).padStart(8)}
 ================================
    Salamat po sa Pagtangkilik!
 ================================\n\n\n`;

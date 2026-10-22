@@ -89,7 +89,7 @@ let rowUtangMode = {};
 let rowTapCounts = {};
 let rowTapTimers = {};
 
-// PRINT COUNTER TRACKER (Continuous Numbering per Row)
+// PRINT COUNTER TRACKER
 let printCounters = {};
 
 // DEBOUNCE SAVE TIMER
@@ -208,7 +208,7 @@ function setPreviewMode(preview) {
 }
 
 // ============================================================
-// MODALS (UPDATED WORKFLOW)
+// MODALS
 // ============================================================
 
 function showOpenModal() {
@@ -217,7 +217,6 @@ function showOpenModal() {
     document.getElementById("modalSubtext").textContent = "Please fill out both the Date and Name to start encoding.";
     document.getElementById("modalActionBtn").textContent = "Open Ledger";
     
-    // Palaging blangko/empty ang modal pagka-bukas
     document.getElementById("modalDateInput").value = "";
     document.getElementById("modalNameInput").value = "";
     document.getElementById("setupModal").style.display = "flex";
@@ -277,7 +276,6 @@ function handleModalSubmit() {
         setEncodingEditable(false);
         alert("Ledger saved successfully!");
     } else {
-        // OPEN / NEW LEDGER MODE - CHECK DUPLICATE DATE IN HISTORY
         const history = JSON.parse(localStorage.getItem("miki_30day_history") || "[]");
         const existingFile = history.find(item => item.date === dateVal);
 
@@ -292,11 +290,10 @@ function handleModalSubmit() {
                 loadHistoryFile(dateVal);
                 return;
             } else {
-                return; // Mananatili sa modal para palitan ang date kung Cancel
+                return;
             }
         }
 
-        // BAGONG DATE (NEW LEDGER)
         currentSessionDate = dateVal;
         currentSessionName = nameVal;
 
@@ -309,7 +306,7 @@ function handleModalSubmit() {
 
         applyDefaultNamesIfEmpty();
         saveLedger();
-        forceSaveCurrentDay(); // Pumasok na agad sa saved history list
+        forceSaveCurrentDay();
         loadRowToMain(1);
     }
 }
@@ -323,7 +320,7 @@ function promptNewFile() {
 }
 
 // ============================================================
-// AUTO SAVE
+// AUTO SAVE & RESET
 // ============================================================
 
 function autoSaveAndReset() {
@@ -333,10 +330,6 @@ function autoSaveAndReset() {
         resetLedgerState();
     }
 }
-
-// ============================================================
-// RESET LEDGER
-// ============================================================
 
 function resetLedgerState() {
     setPreviewMode(false);
@@ -358,7 +351,7 @@ function resetLedgerState() {
 }
 
 // ============================================================
-// APPLY DEFAULT NAMES
+// DEFAULT NAMES & CLEAR
 // ============================================================
 
 function applyDefaultNamesIfEmpty() {
@@ -408,7 +401,7 @@ function clearAllLedgerInputs() {
 }
 
 // ============================================================
-// LOCK NAME COLUMN
+// LOCKS & TAPS
 // ============================================================
 
 function handleKeyClick() {
@@ -439,10 +432,6 @@ function toggleLockState(locked) {
     });
 }
 
-// ============================================================
-// LOCK PRICES
-// ============================================================
-
 function handlePriceKeyClick() {
     if (isPreviewMode) return;
 
@@ -470,10 +459,6 @@ function togglePriceLockState(locked) {
         field.style.backgroundColor = locked ? "#e5e7eb" : "white";
     });
 }
-
-// ============================================================
-// 5-TAP HANDLER FOR COLL'N (Row Utang Mode)
-// ============================================================
 
 function handleRowCollTap(row) {
     if (isPreviewMode) return;
@@ -532,10 +517,6 @@ function formatMoney(value) {
     });
 }
 
-// ============================================================
-// ACTIVE CUSTOMER
-// ============================================================
-
 function updateActiveCustomerName(row) {
     if (row === activeRow) {
         const nameVal = document.getElementById(`ledgerName_${row}`).value.trim();
@@ -545,7 +526,7 @@ function updateActiveCustomerName(row) {
 }
 
 // ============================================================
-// SYNC PANEL
+// SYNC & MAIN CALCULATION
 // ============================================================
 
 function syncFromPanel(type) {
@@ -565,10 +546,6 @@ function syncFromTable(type) {
     calculateMain();
 }
 
-// ============================================================
-// CLEAR MAIN
-// ============================================================
-
 function clearMainInputs() {
     document.getElementById("qtyReg").value = "";
     document.getElementById("syncDry").value = "";
@@ -587,10 +564,6 @@ function clearMainInputs() {
 
     calculateMain();
 }
-
-// ============================================================
-// MAIN CALCULATION
-// ============================================================
 
 function calculateMain() {
     const regQty = getVal("qtyReg");
@@ -623,7 +596,6 @@ function calculateMain() {
     document.getElementById("totalAmount").textContent = formatMoney(totalOrdersAmount);
     document.getElementById("netTotalAmount").textContent = formatMoney(netTotal);
 
-    // SYNC TO SECOND TABLE
     document.getElementById(`ledgerDry_${activeRow}`).value = document.getElementById("qtyReg").value;
     document.getElementById(`ledgerFresh_${activeRow}`).value = document.getElementById("qtyFresh").value;
     document.getElementById(`ledgerCab_${activeRow}`).value = document.getElementById("qtyCab").value;
@@ -648,11 +620,9 @@ function calculateMain() {
 
     document.getElementById(`ledgerRem_${activeRow}`).value = formatMoney(remVal);
 
-    // SAVE MULTIPLIERS / PRICES GLOBALLY
     saveGlobalPrices();
-
     calculateLedgerTotals();
-    debouncedSaveLedger(); // Awtomatikong nag-save bawat input
+    debouncedSaveLedger();
 }
 
 function saveGlobalPrices() {
@@ -688,10 +658,6 @@ function restoreGlobalPrices() {
     }
 }
 
-// ============================================================
-// LOAD ROW
-// ============================================================
-
 function loadRowToMain(row) {
     if (!isEditingActive || isPreviewMode) return;
 
@@ -713,15 +679,10 @@ function loadRowToMain(row) {
     document.getElementById("inputBal").value = document.getElementById(`ledgerBal_${row}`).value;
 
     const rawColln = document.getElementById(`ledgerPay_${row}`).value.replace(/,/g, '');
-
     document.getElementById("inputPay").value = rawColln !== "" ? rawColln : "";
 
     calculateMain();
 }
-
-// ============================================================
-// SECOND TABLE TOTALS
-// ============================================================
 
 function calculateLedgerTotals() {
     let sumDry = 0, sumFresh = 0, sumCab = 0, sumBo = 0;
@@ -755,10 +716,6 @@ function calculateLedgerTotals() {
 
     calculateExtraTable();
 }
-
-// ============================================================
-// THIRD TABLE CALCULATION
-// ============================================================
 
 function calculateExtraTable() {
     let leftTotal = 0;
@@ -798,7 +755,7 @@ function calculateExtraTable() {
 }
 
 // ============================================================
-// SAVE CURRENT DAY DRAFT
+// STORAGE & HISTORY
 // ============================================================
 
 function saveLedger() {
@@ -847,10 +804,6 @@ function saveLedger() {
     localStorage.setItem("miki_ledger_data", JSON.stringify(ledgerData));
 }
 
-// ============================================================
-// SAVE TO 30-DAY HISTORY
-// ============================================================
-
 function forceSaveCurrentDay() {
     if (!currentSessionDate || !currentSessionName) return;
 
@@ -875,10 +828,6 @@ function forceSaveCurrentDay() {
     localStorage.setItem("miki_30day_history", JSON.stringify(history));
     renderHistoryUI();
 }
-
-// ============================================================
-// CREATE DATA SNAPSHOT FROM CURRENT SCREEN
-// ============================================================
 
 function getCurrentLedgerSnapshot() {
     const snapshot = {
@@ -919,10 +868,6 @@ function getCurrentLedgerSnapshot() {
 
     return snapshot;
 }
-
-// ============================================================
-// RESTORE DATA TO SCREEN
-// ============================================================
 
 function restoreLedgerData(data) {
     if (!data) return;
@@ -975,10 +920,6 @@ function restoreLedgerData(data) {
     calculateExtraTable();
 }
 
-// ============================================================
-// LOAD HISTORY FILE - EDIT MODE
-// ============================================================
-
 function loadHistoryFile(dateKey) {
     const history = JSON.parse(localStorage.getItem("miki_30day_history") || "[]");
     const selectedFile = history.find(item => item.date === dateKey);
@@ -1003,10 +944,6 @@ function loadHistoryFile(dateKey) {
     renderHistoryUI(dateKey);
     resetInactivityTimer();
 }
-
-// ============================================================
-// HISTORY PREVIEW
-// ============================================================
 
 function previewHistoryFile(dateKey) {
     const history = JSON.parse(localStorage.getItem("miki_30day_history") || "[]");
@@ -1040,10 +977,6 @@ function previewHistoryFile(dateKey) {
     renderHistoryUI(dateKey);
     resetInactivityTimer();
 }
-
-// ============================================================
-// EXIT HISTORY PREVIEW
-// ============================================================
 
 function exitHistoryPreview() {
     if (!isPreviewMode) return;
@@ -1080,10 +1013,6 @@ function exitHistoryPreview() {
     renderHistoryUI();
 }
 
-// ============================================================
-// DELETE HISTORY
-// ============================================================
-
 function deleteHistoryFile(dateKey) {
     if (confirm(`Delete file for ${dateKey}?`)) {
         let history = JSON.parse(localStorage.getItem("miki_30day_history") || "[]");
@@ -1098,10 +1027,6 @@ function deleteHistoryFile(dateKey) {
         }
     }
 }
-
-// ============================================================
-// HISTORY UI
-// ============================================================
 
 function renderHistoryUI(selectedDateKey = null) {
     const historyContainer = document.getElementById("historyContainer");
@@ -1175,10 +1100,6 @@ function renderHistoryUI(selectedDateKey = null) {
     });
 }
 
-// ============================================================
-// LOAD CURRENT DRAFT (MODIFIED FOR EMPTY START)
-// ============================================================
-
 function loadLedger() {
     restoreGlobalPrices();
     renderHistoryUI();
@@ -1188,7 +1109,6 @@ function loadLedger() {
         input.addEventListener('input', calculateMain);
     });
 
-    // Pakinggan ang lahat ng input para sa live auto-save
     document.querySelectorAll('input').forEach(input => {
         input.addEventListener('input', () => {
             if (isEditingActive && !isPreviewMode) {
@@ -1197,27 +1117,32 @@ function loadLedger() {
         });
     });
 
-    // Laging buksan ang blangkong Open Modal sa bago o sariwang bukas ng app
     setPreviewMode(false);
     setEncodingEditable(false);
     updateSessionDateDisplay();
     showOpenModal();
 }
 
+// ============================================================
+// PRINT ACTIVE ROW RECEIPT (MULA SA MAIN TABLE)
+// ============================================================
+function printActiveRowReceipt() {
+    if (activeRow) {
+        printRowReceipt(activeRow);
+    } else {
+        alert("Pumili muna ng customer bago mag-print!");
+    }
+}
+
 // ==========================================
-// RAWBT THERMAL PRINTER INTEGRATION (GLOBAL DAILY CONTINUOUS COUNTER)
+// RAWBT THERMAL PRINTER INTEGRATION (GLOBAL DAILY COUNTER)
 // ==========================================
 function printRowReceipt(rowNum) {
     const sessionDate = currentSessionDate || new Date().toISOString().split('T')[0];
-    
-    // Global key na nakatali LANG sa petsa (walang rowNum o name)
     const storageKey = `miki_counter_${sessionDate}_global`;
 
-    // Basahin ang kasalukuyang total prints ngayong araw
     let currentCount = parseInt(localStorage.getItem(storageKey)) || 0;
-    currentCount += 1; // Dagdag 1 sa pangkalahatang bilang
-    
-    // I-save ang updated global print count
+    currentCount += 1;
     localStorage.setItem(storageKey, currentCount.toString());
 
     saveLedger();

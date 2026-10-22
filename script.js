@@ -89,6 +89,9 @@ let rowUtangMode = {};
 let rowTapCounts = {};
 let rowTapTimers = {};
 
+// PRINT COUNTER TRACKER (Continuous Numbering per Row)
+let printCounters = {};
+
 // DEBOUNCE SAVE TIMER
 let saveTimeout = null;
 
@@ -320,6 +323,7 @@ function resetLedgerState() {
     currentSessionDate = "";
     currentSessionName = "";
     rowUtangMode = {};
+    printCounters = {};
 
     updateSessionDateDisplay();
     clearAllLedgerInputs();
@@ -361,6 +365,7 @@ function clearAllLedgerInputs() {
     }
 
     rowUtangMode = {};
+    printCounters = {};
 
     for (let i = 1; i <= 8; i++) {
         document.getElementById(`extraItem_${i}`).value = "";
@@ -580,18 +585,18 @@ function calculateMain() {
     const boPrice = getVal("priceBo");
     const boAmount = Math.round((boQty / 2) * boPrice);
 
+    const totalOrdersAmount = regAmount + freshAmount + cabAmount - boAmount; // Ito ang mismong Billing ng items ngayon
     const balAmount = Math.round(getVal("inputBal"));
     const payAmount = Math.round(getVal("inputPay"));
 
-    const total = regAmount + freshAmount + cabAmount - boAmount;
-    const billingAmount = total + balAmount;
-    const netTotal = billingAmount - payAmount;
+    const grandTotalAmount = totalOrdersAmount + balAmount; // Grand total (Items + Previous Bal)
+    const netTotal = grandTotalAmount - payAmount;
 
     document.getElementById("amountReg").textContent = formatMoney(regAmount);
     document.getElementById("amountFresh").textContent = formatMoney(freshAmount);
     document.getElementById("amountCab").textContent = formatMoney(cabAmount);
     document.getElementById("amountBo").textContent = formatMoney(boAmount);
-    document.getElementById("totalAmount").textContent = formatMoney(total);
+    document.getElementById("totalAmount").textContent = formatMoney(totalOrdersAmount);
     document.getElementById("netTotalAmount").textContent = formatMoney(netTotal);
 
     // SYNC TO SECOND TABLE
@@ -600,7 +605,9 @@ function calculateMain() {
     document.getElementById(`ledgerCab_${activeRow}`).value = document.getElementById("qtyCab").value;
     document.getElementById(`ledgerBo_${activeRow}`).value = document.getElementById("qtyBo").value;
     document.getElementById(`ledgerBal_${activeRow}`).value = document.getElementById("inputBal").value;
-    document.getElementById(`ledgerBilling_${activeRow}`).value = formatMoney(billingAmount);
+    
+    // Itinama natin: Ang Billing sa ledger row ay ang total items ngayon lang (hindi pa kasama ang bal)
+    document.getElementById(`ledgerBilling_${activeRow}`).value = formatMoney(totalOrdersAmount);
 
     const hasPayEntry = document.getElementById("inputPay").value.trim() !== "";
     let collnVal = 0;
@@ -608,11 +615,11 @@ function calculateMain() {
 
     if (rowUtangMode[activeRow]) {
         collnVal = 0;
-        remVal = billingAmount;
+        remVal = grandTotalAmount;
         document.getElementById(`ledgerPay_${activeRow}`).value = "";
     } else {
-        collnVal = hasPayEntry ? payAmount : billingAmount;
-        remVal = billingAmount - collnVal;
+        collnVal = hasPayEntry ? payAmount : grandTotalAmount;
+        remVal = grandTotalAmount - collnVal;
         document.getElementById(`ledgerPay_${activeRow}`).value = formatMoney(collnVal);
     }
 
@@ -783,6 +790,7 @@ function saveLedger() {
         name: currentSessionName,
         rows: {},
         utangModes: rowUtangMode,
+        printCounters: printCounters,
         extraTable: {
             note: noteElement ? noteElement.value : ""
         },
@@ -855,6 +863,7 @@ function getCurrentLedgerSnapshot() {
         name: currentSessionName,
         rows: {},
         utangModes: { ...rowUtangMode },
+        printCounters: { ...printCounters },
         extraTable: {
             note: document.getElementById("newTableNote")?.value || ""
         },
@@ -900,6 +909,7 @@ function restoreLedgerData(data) {
     currentSessionDate = data.date || "";
     currentSessionName = data.name || "";
     rowUtangMode = data.utangModes ? { ...data.utangModes } : {};
+    printCounters = data.printCounters ? { ...data.printCounters } : {};
 
     updateSessionDateDisplay();
 
@@ -1038,6 +1048,7 @@ function exitHistoryPreview() {
     currentSessionDate = "";
     currentSessionName = "";
     rowUtangMode = {};
+    printCounters = {};
 
     updateSessionDateDisplay();
     clearAllLedgerInputs();
@@ -1207,6 +1218,16 @@ function loadLedger() {
 // RAWBT THERMAL PRINTER INTEGRATION (STABLE)
 // ==========================================
 function printRowReceipt(rowNum) {
+    // Increment continuous print counter para sa row na ito
+    if (!printCounters[rowNum]) {
+        printCounters[rowNum] = 0;
+    }
+    printCounters[rowNum]++;
+    const currentPrintCount = printCounters[rowNum];
+
+    // I-save agad ang counter state sa storage
+    saveLedger();
+
     const nameInput = document.getElementById(`ledgerName_${rowNum}`);
     const customerName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : `Customer ${rowNum}`;
     
@@ -1217,7 +1238,7 @@ function printRowReceipt(rowNum) {
     const bal = parseFloat(document.getElementById(`ledgerBal_${rowNum}`).value) || 0;
     
     const billingStr = document.getElementById(`ledgerBilling_${rowNum}`).value.replace(/,/g, '');
-    const billing = parseFloat(billingStr) || 0;
+    const billing = parseFloat(billingStr) || 0; // Ito na ang tamang Items Total ngayon
     
     const paymentStr = document.getElementById(`ledgerPay_${rowNum}`).value.replace(/,/g, '');
     const payment = parseFloat(paymentStr) || 0;
@@ -1225,16 +1246,20 @@ function printRowReceipt(rowNum) {
     const utangStr = document.getElementById(`ledgerRem_${rowNum}`).value.replace(/,/g, '');
     const utang = parseFloat(utangStr) || 0;
 
+    // Tamang Grand Total computation (Billing + Previous Bal)
+    const grandTotal = billing + bal;
+
     const dateVal = document.getElementById("displayFileDate") ? document.getElementById("displayFileDate").innerText : "TODAY";
     const routeName = document.getElementById("displayFileName") ? document.getElementById("displayFileName").innerText : "Paul";
 
     let receiptText = 
 `================================
-           Blessed Day      
+          Blessed Day po     
 ================================
 Date: ${dateVal}
 Route: ${routeName}
 Customer: ${customerName}
+Print Copy #${currentPrintCount}
 --------------------------------
 ITEM       QTY    
 --------------------------------
@@ -1246,15 +1271,15 @@ BO         ${String(bo).padEnd(5)}
 BILLING:              P ${String(billing.toFixed(2)).padStart(7)}
 PREVIOUS BAL:         P ${String(bal.toFixed(2)).padStart(7)}
 --------------------------------
-GRAND TOTAL:          P ${String((billing + bal).toFixed(2)).padStart(7)}
+GRAND TOTAL:          P ${String(grandTotal.toFixed(2)).padStart(7)}
 Payment:              P ${String(payment.toFixed(2)).padStart(7)}
 --------------------------------
 Balance:              P ${String(utang.toFixed(2)).padStart(7)}
 ================================
-    Salamat sa Pagtangkilik!
+   Salamat po sa Pagtangkilik!
 ================================\n\n\n`;
 
-    // Direct rawbt: base scheme na walang Play Store error
+    // Direct rawbt: base scheme para sa app mo
     const rawbtUrl = "rawbt:base64," + btoa(unescape(encodeURIComponent(receiptText)));
     window.location.href = rawbtUrl;
 }

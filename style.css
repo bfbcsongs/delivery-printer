@@ -835,3 +835,32 @@ body.preview-mode .session-bar {
     }
 
 }
+/* Fixed height container na may internal scrollbar */
+.table-scroll-container {
+    max-height: 480px; /* I-adjust ayon sa gustong taas ng nakikitang rows */
+    overflow-y: auto;
+    overflow-x: auto;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+}
+
+/* Siguraduhing sticky ang table header para manatili sa itaas habang nag-se-scroll */
+.table-scroll-container table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: #1e293b; /* Dark header background */
+    color: white;
+}
+
+/* Button UI for View Switcher */
+.btn-toggle-view {
+    padding: 10px 20px;
+    font-weight: bold;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    user-select: none;
+    cursor: pointer;
+    transition: background-color 0.2s, opacity 0.2s;
+}

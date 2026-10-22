@@ -231,7 +231,13 @@ function openSaveConfirmationModal() {
 }
 
 function handleModalSubmit() {
-    const todayDate = new Date().toISOString().split('T')[0];
+    // Gamitin ang local timezone date sa halip na toISOString()
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const todayDate = `${year}-${month}-${day}`;
+
     const nameVal = document.getElementById("modalNameInput").value.trim();
 
     if (!nameVal) {
@@ -290,6 +296,7 @@ function handleModalSubmit() {
         loadRowToMain(1);
     }
 }
+
 
 function closeSetupModal() {
     document.getElementById("setupModal").style.display = "none";

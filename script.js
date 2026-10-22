@@ -1206,9 +1206,17 @@ function printActiveRowReceipt() {
 // ==========================================
 // DIRECT WEB BLUETOOTH PRINTER INTEGRATION (FIXED ALIGNMENT)
 // ==========================================
-async function printRowReceipt(rowNum) {
-    const sessionDate = currentSessionDate || new Date().toISOString().split('T')[0];
-    const storageKey = `miki_counter_${sessionDate}_global`;
+// Mula sa:
+// const sessionDate = currentSessionDate || new Date().toISOString().split('T')[0];
+
+// Palitan ng:
+const d = new Date();
+const year = d.getFullYear();
+const month = String(d.getMonth() + 1).padStart(2, '0');
+const day = String(d.getDate()).padStart(2, '0');
+const todayDate = `${year}-${month}-${day}`;
+const sessionDate = currentSessionDate || todayDate;
+
 
     let currentCount = parseInt(localStorage.getItem(storageKey)) || 0;
     currentCount += 1;

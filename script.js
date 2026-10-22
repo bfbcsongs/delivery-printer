@@ -1195,6 +1195,84 @@ function printActiveRowReceipt() {
     }
 }
 
+// ============================================================
+// DIRECT WEB BLUETOOTH PRINTER MANAGEMENT (STABLE 256 CHUNK)
+// ============================================================
+
+let bluetoothDevice = null;
+let bluetoothCharacteristic = null;
+
+async function connectBluetoothPrinter() {
+    try {
+        console.log("Searching for Bluetooth Thermal Printer...");
+        
+        bluetoothDevice = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: [
+                '000018f0-0000-1000-8000-00805f9b34fb', // Standard Serial / Printer UUID
+                'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+                '00001101-0000-1000-8000-00805f9b34fb'  // SPP UUID
+            ]
+        });
+
+        alert("Pairing with: " + (bluetoothDevice.name || "Printer"));
+        const server = await bluetoothDevice.gatt.connect();
+        
+        const services = await server.getPrimaryServices();
+        for (const service of services) {
+            const characteristics = await service.getCharacteristics();
+            for (const char of characteristics) {
+                if (char.properties.write || char.properties.writeWithoutResponse) {
+                    bluetoothCharacteristic = char;
+                    break;
+                }
+            }
+            if (bluetoothCharacteristic) break;
+        }
+
+        if (bluetoothCharacteristic) {
+            alert("SUCCESS! Printer Connected.");
+        } else {
+            alert("Printer connected, but write channel was not found.");
+        }
+    } catch (error) {
+        console.error("Bluetooth Connection Error:", error);
+        alert("Bluetooth Error: " + error.message);
+    }
+}
+
+async function sendToPrinter(textData) {
+    if (!bluetoothCharacteristic) {
+        const connectNow = confirm("Printer not connected yet. Do you want to pair/connect your Bluetooth Printer now?");
+        if (connectNow) {
+            await connectBluetoothPrinter();
+        }
+        if (!bluetoothCharacteristic) return false;
+    }
+
+    try {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(textData);
+        
+        // Naka-256 bytes na para buo at hindi maputol ang gitna ng resibo
+        const chunkSize = 256; 
+        for (let i = 0; i < data.length; i += chunkSize) {
+            const chunk = data.slice(i, i + chunkSize);
+            if (bluetoothCharacteristic.properties.writeWithoutResponse) {
+                await bluetoothCharacteristic.writeValueWithoutResponse(chunk);
+            } else {
+                await bluetoothCharacteristic.writeValue(chunk);
+            }
+        }
+        return true;
+    } catch (err) {
+        console.error("Print Error:", err);
+        alert("Printing failed. Reconnecting...");
+        bluetoothCharacteristic = null;
+        return false;
+    }
+}
+
 // ==========================================
 // DIRECT WEB BLUETOOTH PRINTER INTEGRATION (SINGLE COPY)
 // ==========================================

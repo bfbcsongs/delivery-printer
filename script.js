@@ -1254,6 +1254,8 @@ async function printRowReceipt(rowNum) {
 
     function generateReceiptBody(copyTitle) {
         return ESC_INIT + ESC_FONT_A + ESC_ALIGN_CENTER +
+    function generateReceiptBody(copyTitle) {
+        return ESC_INIT + ESC_FONT_A + ESC_ALIGN_CENTER +
 `================================
          Blessed Day po         
 ================================\n` +
@@ -1263,7 +1265,6 @@ Time: ${timeVal}
 Route: ${routeName}
 Customer: ${customerName}
 Print Copy #${currentCount}
-*** ${copyTitle} ***
 --------------------------------
 ITEM      QTY             AMOUNT
 --------------------------------

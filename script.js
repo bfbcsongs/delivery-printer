@@ -92,17 +92,6 @@ let rowTapTimers = {};
 // PRINT COUNTER TRACKER
 let printCounters = {};
 
-// DEBOUNCE SAVE TIMER
-let saveTimeout = null;
-
-function debouncedSaveLedger() {
-    clearTimeout(saveTimeout);
-    saveTimeout = setTimeout(() => {
-        saveLedger();
-        forceSaveCurrentDay();
-    }, 300);
-}
-
 // ============================================================
 // SESSION DATE DISPLAY
 // ============================================================
@@ -208,16 +197,25 @@ function setPreviewMode(preview) {
 }
 
 // ============================================================
-// MODALS
+// MODALS (AUTOMATIC DEVICE DATE)
 // ============================================================
 
 function showOpenModal() {
     modalMode = "OPEN";
     document.getElementById("modalTitle").textContent = "Start New Ledger File";
-    document.getElementById("modalSubtext").textContent = "Please fill out both the Date and Name to start encoding.";
+    document.getElementById("modalSubtext").textContent = "System date is automatically set to today. Enter Salesman/Route name.";
     document.getElementById("modalActionBtn").textContent = "Open Ledger";
     
-    document.getElementById("modalDateInput").value = "";
+    // Kuhanin ang totoong petsa mula sa phone
+    const todayStr = new Date().toISOString().split('T')[0];
+    
+    const dateInput = document.getElementById("modalDateInput");
+    if (dateInput) {
+        dateInput.value = todayStr;
+        dateInput.readOnly = true; 
+        dateInput.style.backgroundColor = "#e5e7eb";
+    }
+
     document.getElementById("modalNameInput").value = "";
     document.getElementById("setupModal").style.display = "flex";
 }
@@ -229,38 +227,37 @@ function openSaveConfirmationModal() {
     }
 
     if (isPreviewMode) {
-        alert("Preview mode is read-only. Tap the saved file again to return to the working ledger, or tap Edit.");
+        alert("Preview mode is read-only.");
         return;
     }
 
     modalMode = "SAVE";
     document.getElementById("modalTitle").textContent = "Confirm & Save Ledger File";
-    document.getElementById("modalSubtext").textContent = "Review or edit the Date and Name before saving to history.";
+    document.getElementById("modalSubtext").textContent = "Review Salesman/Route name before saving.";
     document.getElementById("modalActionBtn").textContent = "Save File";
-    document.getElementById("modalDateInput").value = currentSessionDate;
+    
+    const todayStr = new Date().toISOString().split('T')[0];
+    const dateInput = document.getElementById("modalDateInput");
+    if (dateInput) {
+        dateInput.value = todayStr;
+        dateInput.readOnly = true;
+    }
+
     document.getElementById("modalNameInput").value = currentSessionName;
     document.getElementById("setupModal").style.display = "flex";
 }
 
 function handleModalSubmit() {
-    const dateVal = document.getElementById("modalDateInput").value;
+    const todayDate = new Date().toISOString().split('T')[0];
     const nameVal = document.getElementById("modalNameInput").value.trim();
 
-    if (!dateVal || !nameVal) {
-        alert("Please enter both Date and Salesman/Route Name!");
+    if (!nameVal) {
+        alert("Please enter Salesman / Route Name!");
         return;
     }
 
     if (modalMode === "SAVE") {
-        const history = JSON.parse(localStorage.getItem("miki_30day_history") || "[]");
-        const isDuplicate = history.some(item => item.date === dateVal && item.date !== currentSessionDate);
-
-        if (isDuplicate) {
-            const confirmOverwrite = confirm(`Warning: A saved file with date ${dateVal} already exists. Do you want to overwrite it?`);
-            if (!confirmOverwrite) return;
-        }
-
-        currentSessionDate = dateVal;
+        currentSessionDate = todayDate;
         currentSessionName = nameVal;
         updateSessionDateDisplay();
         document.getElementById("setupModal").style.display = "none";
@@ -277,24 +274,24 @@ function handleModalSubmit() {
         alert("Ledger saved successfully!");
     } else {
         const history = JSON.parse(localStorage.getItem("miki_30day_history") || "[]");
-        const existingFile = history.find(item => item.date === dateVal);
+        const existingFile = history.find(item => item.date === todayDate);
 
         if (existingFile) {
             const confirmContinue = confirm(
-                `WARNING: A saved ledger for ${dateVal} (${existingFile.name}) already exists.\n\n` +
-                `Click OK (CONTINUE) to edit this existing file, or CANCEL to choose another date.`
+                `A saved ledger for TODAY (${todayDate}) already exists.\n\n` +
+                `Click OK (CONTINUE) to edit today's file.`
             );
 
             if (confirmContinue) {
                 document.getElementById("setupModal").style.display = "none";
-                loadHistoryFile(dateVal);
+                loadHistoryFile(todayDate);
                 return;
             } else {
                 return;
             }
         }
 
-        currentSessionDate = dateVal;
+        currentSessionDate = todayDate;
         currentSessionName = nameVal;
 
         updateSessionDateDisplay();
@@ -326,7 +323,7 @@ function promptNewFile() {
 function autoSaveAndReset() {
     if (currentSessionDate && currentSessionName && !isPreviewMode) {
         forceSaveCurrentDay();
-        alert("System auto-saved due to 15 minutes of inactivity. Ledger refreshed for new day.");
+        alert("System auto-saved due to 15 minutes of inactivity.");
         resetLedgerState();
     }
 }
@@ -492,8 +489,6 @@ function handleRowCollTap(row) {
                     remEl.value = "0";
                 }
                 calculateLedgerTotals();
-                saveLedger();
-                forceSaveCurrentDay();
             }
         }
     }
@@ -526,13 +521,12 @@ function updateActiveCustomerName(row) {
 }
 
 // ============================================================
-// SYNC & MAIN CALCULATION (FIXED BO SYNC)
+// SYNC & MAIN CALCULATION
 // ============================================================
 
 function syncFromPanel(type) {
     if (isPreviewMode) return;
     
-    // Suportahan ang BO o Bo kahit anong case ang ipasa
     let targetType = type;
     if (type.toUpperCase() === "BO") targetType = "Bo";
 
@@ -638,7 +632,6 @@ function calculateMain() {
 
     saveGlobalPrices();
     calculateLedgerTotals();
-    debouncedSaveLedger();
 }
 
 function saveGlobalPrices() {
@@ -1125,14 +1118,6 @@ function loadLedger() {
         input.addEventListener('input', calculateMain);
     });
 
-    document.querySelectorAll('input').forEach(input => {
-        input.addEventListener('input', () => {
-            if (isEditingActive && !isPreviewMode) {
-                debouncedSaveLedger();
-            }
-        });
-    });
-
     setPreviewMode(false);
     setEncodingEditable(false);
     updateSessionDateDisplay();
@@ -1140,7 +1125,7 @@ function loadLedger() {
 }
 
 // ============================================================
-// PRINT ACTIVE ROW RECEIPT (MULA SA MAIN TABLE)
+// PRINT ACTIVE ROW RECEIPT (STRICT SAVE UPON PRINT)
 // ============================================================
 function printActiveRowReceipt() {
     if (activeRow) {
@@ -1151,7 +1136,7 @@ function printActiveRowReceipt() {
 }
 
 // ==========================================
-// RAWBT THERMAL PRINTER INTEGRATION (WITH ITEM AMOUNTS & ALIGNED LAYOUT)
+// RAWBT PRINTER INTEGRATION (2 COPIES ALWAYS: CUSTOMER & DUPLICATE)
 // ==========================================
 function printRowReceipt(rowNum) {
     const sessionDate = currentSessionDate || new Date().toISOString().split('T')[0];
@@ -1161,30 +1146,28 @@ function printRowReceipt(rowNum) {
     currentCount += 1;
     localStorage.setItem(storageKey, currentCount.toString());
 
+    // STRICT RECORDING: I-save lang ang ledger file kapag NAGPRINT
     saveLedger();
     forceSaveCurrentDay();
 
     const nameInput = document.getElementById(`ledgerName_${rowNum}`);
     const customerName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : `Customer ${rowNum}`;
     
-    // Kumuha ng Quantities
     const dry = parseFloat(document.getElementById(`ledgerDry_${rowNum}`).value) || 0;
     const fresh = parseFloat(document.getElementById(`ledgerFresh_${rowNum}`).value) || 0;
     const cab = parseFloat(document.getElementById(`ledgerCab_${rowNum}`).value) || 0;
     const bo = parseFloat(document.getElementById(`ledgerBo_${rowNum}`).value) || 0;
     const bal = parseFloat(document.getElementById(`ledgerBal_${rowNum}`).value) || 0;
 
-    // Kumuha ng Prices
     const priceReg = parseFloat(document.getElementById("priceReg")?.value) || 50;
     const priceFresh = parseFloat(document.getElementById("priceFresh")?.value) || 50;
     const priceCab = parseFloat(document.getElementById("priceCab")?.value) || 40;
     const priceBo = parseFloat(document.getElementById("priceBo")?.value) || 50;
 
-    // Compute Item Amounts
     const dryAmt = dry * priceReg;
     const freshAmt = fresh * priceFresh;
     const cabAmt = cab * priceCab;
-    const boAmt = (bo / 2) * priceBo; // Half price deduction para sa BO
+    const boAmt = (bo / 2) * priceBo;
     
     const billingStr = document.getElementById(`ledgerBilling_${rowNum}`).value.replace(/,/g, '');
     const billing = parseFloat(billingStr) || 0;
@@ -1203,15 +1186,17 @@ function printRowReceipt(rowNum) {
     const now = new Date();
     const timeVal = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
-    let receiptText = 
-`================================
-          Blessed Day Po     
+    // TEMPLATE GENERATOR FUNCTION FOR COPIES
+    function generateReceiptBody(copyTitle) {
+        return `================================
+          Blessed Day po     
 ================================
 Date: ${dateVal}
 Time: ${timeVal}
-Miki Boy: ${routeName}
+Route: ${routeName}
 Customer: ${customerName}
 Print Copy #${currentCount}
+*** ${copyTitle} ***
 --------------------------------
 ITEM       QTY            AMOUNT
 --------------------------------
@@ -1221,7 +1206,7 @@ CAB        ${String(cab).padEnd(6)}     P ${String(cabAmt.toFixed(2)).padStart(8
 BO         ${String(bo).padEnd(6)}     P ${String(boAmt.toFixed(2)).padStart(8)}
 --------------------------------
 BILLING:              P ${String(billing.toFixed(2)).padStart(8)}
-PREVIOUS BAL:         P ${String(bal.toFixed(2)).padStart(8)}
+PREVIOUS BAL:         P ${String(bal.toFixed(8)).padStart(8)}
 --------------------------------
 GRAND TOTAL:          P ${String(grandTotal.toFixed(2)).padStart(8)}
 Payment:              P ${String(payment.toFixed(2)).padStart(8)}
@@ -1230,7 +1215,14 @@ Balance:              P ${String(utang.toFixed(2)).padStart(8)}
 ================================
    Salamat po sa Pagtangkilik!
 ================================\n\n\n`;
+    }
 
-    const rawbtUrl = "rawbt:base64," + btoa(unescape(encodeURIComponent(receiptText)));
+    // AWAUTOMATIKONG 2 COPIES: CUSTOMER'S COPY + DUPLICATE COPY
+    const copy1 = generateReceiptBody("CUSTOMER'S COPY");
+    const copy2 = generateReceiptBody("DUPLICATE COPY");
+
+    const fullText = copy1 + copy2;
+
+    const rawbtUrl = "rawbt:base64," + btoa(unescape(encodeURIComponent(fullText)));
     window.location.href = rawbtUrl;
 }

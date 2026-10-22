@@ -205,16 +205,6 @@ function showOpenModal() {
     document.getElementById("modalTitle").textContent = "Start New Ledger File";
     document.getElementById("modalSubtext").textContent = "System date is automatically set to today. Enter Salesman/Route name.";
     document.getElementById("modalActionBtn").textContent = "Open Ledger";
-    
-    // Kuhanin ang totoong petsa mula sa phone
-    const todayStr = new Date().toISOString().split('T')[0];
-    
-    const dateInput = document.getElementById("modalDateInput");
-    if (dateInput) {
-        dateInput.value = todayStr;
-        dateInput.readOnly = true; 
-        dateInput.style.backgroundColor = "#e5e7eb";
-    }
 
     document.getElementById("modalNameInput").value = "";
     document.getElementById("setupModal").style.display = "flex";
@@ -235,13 +225,6 @@ function openSaveConfirmationModal() {
     document.getElementById("modalTitle").textContent = "Confirm & Save Ledger File";
     document.getElementById("modalSubtext").textContent = "Review Salesman/Route name before saving.";
     document.getElementById("modalActionBtn").textContent = "Save File";
-    
-    const todayStr = new Date().toISOString().split('T')[0];
-    const dateInput = document.getElementById("modalDateInput");
-    if (dateInput) {
-        dateInput.value = todayStr;
-        dateInput.readOnly = true;
-    }
 
     document.getElementById("modalNameInput").value = currentSessionName;
     document.getElementById("setupModal").style.display = "flex";
@@ -521,7 +504,7 @@ function updateActiveCustomerName(row) {
 }
 
 // ============================================================
-// SYNC & MAIN CALCULATION
+// SYNC & MAIN CALCULATION (SUPPORT 'BO' ALL CAPS)
 // ============================================================
 
 function syncFromPanel(type) {
@@ -1125,6 +1108,83 @@ function loadLedger() {
 }
 
 // ============================================================
+// DIRECT WEB BLUETOOTH PRINTER MANAGEMENT (NO THIRD-PARTY APPS)
+// ============================================================
+
+let bluetoothDevice = null;
+let bluetoothCharacteristic = null;
+
+async function connectBluetoothPrinter() {
+    try {
+        console.log("Searching for Bluetooth Thermal Printer...");
+        
+        bluetoothDevice = await navigator.bluetooth.requestDevice({
+            acceptAllDevices: true,
+            optionalServices: [
+                '000018f0-0000-1000-8000-00805f9b34fb', // Standard Serial / Printer UUID
+                'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
+                '00001101-0000-1000-8000-00805f9b34fb'  // SPP UUID
+            ]
+        });
+
+        alert("Pairing with: " + (bluetoothDevice.name || "Printer"));
+        const server = await bluetoothDevice.gatt.connect();
+        
+        const services = await server.getPrimaryServices();
+        for (const service of services) {
+            const characteristics = await service.getCharacteristics();
+            for (const char of characteristics) {
+                if (char.properties.write || char.properties.writeWithoutResponse) {
+                    bluetoothCharacteristic = char;
+                    break;
+                }
+            }
+            if (bluetoothCharacteristic) break;
+        }
+
+        if (bluetoothCharacteristic) {
+            alert("SUCCESS! Printer Connected.");
+        } else {
+            alert("Printer connected, but write channel was not found.");
+        }
+    } catch (error) {
+        console.error("Bluetooth Connection Error:", error);
+        alert("Bluetooth Error: " + error.message);
+    }
+}
+
+async function sendToPrinter(textData) {
+    if (!bluetoothCharacteristic) {
+        const connectNow = confirm("Printer not connected yet. Do you want to pair/connect your Bluetooth Printer now?");
+        if (connectNow) {
+            await connectBluetoothPrinter();
+        }
+        if (!bluetoothCharacteristic) return false;
+    }
+
+    try {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(textData);
+        
+        const chunkSize = 512;
+        for (let i = 0; i < data.length; i += chunkSize) {
+            const chunk = data.slice(i, i + chunkSize);
+            if (bluetoothCharacteristic.properties.writeWithoutResponse) {
+                await bluetoothCharacteristic.writeValueWithoutResponse(chunk);
+            } else {
+                await bluetoothCharacteristic.writeValue(chunk);
+            }
+        }
+        return true;
+    } catch (err) {
+        console.error("Print Error:", err);
+        alert("Printing failed. Reconnecting...");
+        bluetoothCharacteristic = null;
+        return false;
+    }
+}
+
+// ============================================================
 // PRINT ACTIVE ROW RECEIPT (STRICT SAVE UPON PRINT)
 // ============================================================
 function printActiveRowReceipt() {
@@ -1136,7 +1196,7 @@ function printActiveRowReceipt() {
 }
 
 // ==========================================
-// DIRECT WEB BLUETOOTH PRINTER INTEGRATION (NO RAWBT)
+// DIRECT WEB BLUETOOTH PRINTER INTEGRATION
 // ==========================================
 async function printRowReceipt(rowNum) {
     const sessionDate = currentSessionDate || new Date().toISOString().split('T')[0];
@@ -1146,7 +1206,7 @@ async function printRowReceipt(rowNum) {
     currentCount += 1;
     localStorage.setItem(storageKey, currentCount.toString());
 
-    // STRICT RECORDING: I-save lang ang ledger file kapag NAGPRINT
+    // STRICT RECORDING: Save on print action
     saveLedger();
     forceSaveCurrentDay();
 
@@ -1233,3 +1293,6 @@ ESC_ALIGN_CENTER +
     // Direct Web Bluetooth Print Call
     await sendToPrinter(fullText);
 }
+
+// Auto-initialize app on load
+window.addEventListener('DOMContentLoaded', loadLedger);

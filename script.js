@@ -1215,7 +1215,7 @@ function loadLedger() {
 }
 
 // ==========================================
-// RAWBT THERMAL PRINTER INTEGRATION (STABLE)
+// RAWBT THERMAL PRINTER INTEGRATION (STABLE WITH TIME & COUNTER)
 // ==========================================
 function printRowReceipt(rowNum) {
     // Increment continuous print counter para sa row na ito
@@ -1238,7 +1238,7 @@ function printRowReceipt(rowNum) {
     const bal = parseFloat(document.getElementById(`ledgerBal_${rowNum}`).value) || 0;
     
     const billingStr = document.getElementById(`ledgerBilling_${rowNum}`).value.replace(/,/g, '');
-    const billing = parseFloat(billingStr) || 0; // Ito na ang tamang Items Total ngayon
+    const billing = parseFloat(billingStr) || 0;
     
     const paymentStr = document.getElementById(`ledgerPay_${rowNum}`).value.replace(/,/g, '');
     const payment = parseFloat(paymentStr) || 0;
@@ -1246,17 +1246,21 @@ function printRowReceipt(rowNum) {
     const utangStr = document.getElementById(`ledgerRem_${rowNum}`).value.replace(/,/g, '');
     const utang = parseFloat(utangStr) || 0;
 
-    // Tamang Grand Total computation (Billing + Previous Bal)
     const grandTotal = billing + bal;
 
     const dateVal = document.getElementById("displayFileDate") ? document.getElementById("displayFileDate").innerText : "TODAY";
     const routeName = document.getElementById("displayFileName") ? document.getElementById("displayFileName").innerText : "Paul";
+
+    // Kuha ng kasalukuyang Time (12-hour format na may AM/PM)
+    const now = new Date();
+    const timeVal = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
     let receiptText = 
 `================================
           Blessed Day po     
 ================================
 Date: ${dateVal}
+Time: ${timeVal}
 Route: ${routeName}
 Customer: ${customerName}
 Print Copy #${currentPrintCount}
@@ -1279,7 +1283,7 @@ Balance:              P ${String(utang.toFixed(2)).padStart(7)}
    Salamat po sa Pagtangkilik!
 ================================\n\n\n`;
 
-    // Direct rawbt: base scheme para sa app mo
+    // Direct rawbt: base scheme
     const rawbtUrl = "rawbt:base64," + btoa(unescape(encodeURIComponent(receiptText)));
     window.location.href = rawbtUrl;
 }

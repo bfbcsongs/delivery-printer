@@ -1268,12 +1268,12 @@ ESC_ALIGN_LEFT +
 "Customer: " + customerName + "\n" +
 "Print Copy #" + currentCount + "\n" +
 "--------------------------------\n" +
-"ITEM    QTY               AMOUNT\n" +
+"ITEM    QTY           AMOUNT    \n" +
 "--------------------------------\n" +
-itemLine1 + "\n" +
-itemLine2 + "\n" +
-itemLine3 + "\n" +
-itemLine4 + "\n" +
+itemLine1   + "\n" +
+itemLine2   + "\n" +
+itemLine3   + "\n" +
+itemLine4   + "\n" +
 "--------------------------------\n" +
 "BILLING:          P " + String(billing.toFixed(2)).padStart(10) + "\n" +
 "PREV. BAL:        P " + String(bal.toFixed(2)).padStart(10) + "\n" +

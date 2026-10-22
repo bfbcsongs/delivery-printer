@@ -99,6 +99,7 @@ function debouncedSaveLedger() {
     clearTimeout(saveTimeout);
     saveTimeout = setTimeout(() => {
         saveLedger();
+        forceSaveCurrentDay();
     }, 300);
 }
 
@@ -207,14 +208,16 @@ function setPreviewMode(preview) {
 }
 
 // ============================================================
-// MODALS
+// MODALS (UPDATED WORKFLOW)
 // ============================================================
 
 function showOpenModal() {
     modalMode = "OPEN";
     document.getElementById("modalTitle").textContent = "Start New Ledger File";
-    document.getElementById("modalSubtext").textContent = "Please fill out both the Date and Name to unlock encoding.";
+    document.getElementById("modalSubtext").textContent = "Please fill out both the Date and Name to start encoding.";
     document.getElementById("modalActionBtn").textContent = "Open Ledger";
+    
+    // Palaging blangko/empty ang modal pagka-bukas
     document.getElementById("modalDateInput").value = "";
     document.getElementById("modalNameInput").value = "";
     document.getElementById("setupModal").style.display = "flex";
@@ -274,7 +277,26 @@ function handleModalSubmit() {
         setEncodingEditable(false);
         alert("Ledger saved successfully!");
     } else {
-        // OPEN / NEW LEDGER MODE
+        // OPEN / NEW LEDGER MODE - CHECK DUPLICATE DATE IN HISTORY
+        const history = JSON.parse(localStorage.getItem("miki_30day_history") || "[]");
+        const existingFile = history.find(item => item.date === dateVal);
+
+        if (existingFile) {
+            const confirmContinue = confirm(
+                `WARNING: A saved ledger for ${dateVal} (${existingFile.name}) already exists.\n\n` +
+                `Click OK (CONTINUE) to edit this existing file, or CANCEL to choose another date.`
+            );
+
+            if (confirmContinue) {
+                document.getElementById("setupModal").style.display = "none";
+                loadHistoryFile(dateVal);
+                return;
+            } else {
+                return; // Mananatili sa modal para palitan ang date kung Cancel
+            }
+        }
+
+        // BAGONG DATE (NEW LEDGER)
         currentSessionDate = dateVal;
         currentSessionName = nameVal;
 
@@ -287,6 +309,7 @@ function handleModalSubmit() {
 
         applyDefaultNamesIfEmpty();
         saveLedger();
+        forceSaveCurrentDay(); // Pumasok na agad sa saved history list
         loadRowToMain(1);
     }
 }
@@ -485,6 +508,7 @@ function handleRowCollTap(row) {
                 }
                 calculateLedgerTotals();
                 saveLedger();
+                forceSaveCurrentDay();
             }
         }
     }
@@ -585,11 +609,11 @@ function calculateMain() {
     const boPrice = getVal("priceBo");
     const boAmount = Math.round((boQty / 2) * boPrice);
 
-    const totalOrdersAmount = regAmount + freshAmount + cabAmount - boAmount; // Ito ang mismong Billing ng items ngayon
+    const totalOrdersAmount = regAmount + freshAmount + cabAmount - boAmount;
     const balAmount = Math.round(getVal("inputBal"));
     const payAmount = Math.round(getVal("inputPay"));
 
-    const grandTotalAmount = totalOrdersAmount + balAmount; // Grand total (Items + Previous Bal)
+    const grandTotalAmount = totalOrdersAmount + balAmount;
     const netTotal = grandTotalAmount - payAmount;
 
     document.getElementById("amountReg").textContent = formatMoney(regAmount);
@@ -606,7 +630,6 @@ function calculateMain() {
     document.getElementById(`ledgerBo_${activeRow}`).value = document.getElementById("qtyBo").value;
     document.getElementById(`ledgerBal_${activeRow}`).value = document.getElementById("inputBal").value;
     
-    // Itinama natin: Ang Billing sa ledger row ay ang total items ngayon lang (hindi pa kasama ang bal)
     document.getElementById(`ledgerBilling_${activeRow}`).value = formatMoney(totalOrdersAmount);
 
     const hasPayEntry = document.getElementById("inputPay").value.trim() !== "";
@@ -629,7 +652,7 @@ function calculateMain() {
     saveGlobalPrices();
 
     calculateLedgerTotals();
-    debouncedSaveLedger();
+    debouncedSaveLedger(); // Awtomatikong nag-save bawat input
 }
 
 function saveGlobalPrices() {
@@ -666,7 +689,7 @@ function restoreGlobalPrices() {
 }
 
 // ============================================================
-// LOAD ROW (FIXED PAYMENT BLANK ISSUE)
+// LOAD ROW
 // ============================================================
 
 function loadRowToMain(row) {
@@ -976,6 +999,7 @@ function loadHistoryFile(dateKey) {
     calculateExtraTable();
 
     saveLedger();
+    forceSaveCurrentDay();
     renderHistoryUI(dateKey);
     resetInactivityTimer();
 }
@@ -1152,7 +1176,7 @@ function renderHistoryUI(selectedDateKey = null) {
 }
 
 // ============================================================
-// LOAD CURRENT DRAFT
+// LOAD CURRENT DRAFT (MODIFIED FOR EMPTY START)
 // ============================================================
 
 function loadLedger() {
@@ -1164,69 +1188,35 @@ function loadLedger() {
         input.addEventListener('input', calculateMain);
     });
 
-    const saved = localStorage.getItem("miki_ledger_data");
+    // Pakinggan ang lahat ng input para sa live auto-save
+    document.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', () => {
+            if (isEditingActive && !isPreviewMode) {
+                debouncedSaveLedger();
+            }
+        });
+    });
 
-    if (!saved) {
-        setPreviewMode(false);
-        setEncodingEditable(false);
-        updateSessionDateDisplay();
-        showOpenModal();
-        return;
-    }
-
-    let ledgerData;
-    try {
-        ledgerData = JSON.parse(saved);
-    } catch (error) {
-        console.error("Invalid saved ledger data:", error);
-        localStorage.removeItem("miki_ledger_data");
-        setPreviewMode(false);
-        setEncodingEditable(false);
-        updateSessionDateDisplay();
-        showOpenModal();
-        return;
-    }
-
-    if (!ledgerData.date || !ledgerData.name) {
-        setPreviewMode(false);
-        setEncodingEditable(false);
-        updateSessionDateDisplay();
-        showOpenModal();
-        return;
-    }
-
-    currentSessionDate = ledgerData.date;
-    currentSessionName = ledgerData.name;
-
-    updateSessionDateDisplay();
-    restoreLedgerData(ledgerData);
-
-    document.getElementById("setupModal").style.display = "none";
-
+    // Laging buksan ang blangkong Open Modal sa bago o sariwang bukas ng app
     setPreviewMode(false);
-    setEncodingEditable(true);
-
-    loadRowToMain(1);
-    calculateLedgerTotals();
-    calculateExtraTable();
-
-    renderHistoryUI();
-    resetInactivityTimer();
+    setEncodingEditable(false);
+    updateSessionDateDisplay();
+    showOpenModal();
 }
 
 // ==========================================
-// RAWBT THERMAL PRINTER INTEGRATION (STABLE WITH TIME & COUNTER)
+// RAWBT THERMAL PRINTER INTEGRATION (DATE-BASED COUNTER)
 // ==========================================
 function printRowReceipt(rowNum) {
-    // Increment continuous print counter para sa row na ito
-    if (!printCounters[rowNum]) {
-        printCounters[rowNum] = 0;
-    }
-    printCounters[rowNum]++;
-    const currentPrintCount = printCounters[rowNum];
+    const sessionDate = currentSessionDate || new Date().toISOString().split('T')[0];
+    const storageKey = `miki_counter_${sessionDate}_row_${rowNum}`;
 
-    // I-save agad ang counter state sa storage
+    let currentCount = parseInt(localStorage.getItem(storageKey)) || 0;
+    currentCount += 1;
+    localStorage.setItem(storageKey, currentCount.toString());
+
     saveLedger();
+    forceSaveCurrentDay();
 
     const nameInput = document.getElementById(`ledgerName_${rowNum}`);
     const customerName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : `Customer ${rowNum}`;
@@ -1251,7 +1241,6 @@ function printRowReceipt(rowNum) {
     const dateVal = document.getElementById("displayFileDate") ? document.getElementById("displayFileDate").innerText : "TODAY";
     const routeName = document.getElementById("displayFileName") ? document.getElementById("displayFileName").innerText : "Paul";
 
-    // Kuha ng kasalukuyang Time (12-hour format na may AM/PM)
     const now = new Date();
     const timeVal = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
@@ -1263,7 +1252,7 @@ Date: ${dateVal}
 Time: ${timeVal}
 Route: ${routeName}
 Customer: ${customerName}
-Print Copy #${currentPrintCount}
+Print Copy #${currentCount}
 --------------------------------
 ITEM       QTY    
 --------------------------------
@@ -1283,7 +1272,6 @@ Balance:              P ${String(utang.toFixed(2)).padStart(7)}
    Salamat po sa Pagtangkilik!
 ================================\n\n\n`;
 
-    // Direct rawbt: base scheme
     const rawbtUrl = "rawbt:base64," + btoa(unescape(encodeURIComponent(receiptText)));
     window.location.href = rawbtUrl;
 }

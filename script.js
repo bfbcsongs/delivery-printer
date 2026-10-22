@@ -1136,9 +1136,9 @@ function printActiveRowReceipt() {
 }
 
 // ==========================================
-// RAWBT THERMAL PRINTER INTEGRATION (SPACED & CLEAN FONT)
+// DIRECT WEB BLUETOOTH PRINTER INTEGRATION (NO RAWBT)
 // ==========================================
-function printRowReceipt(rowNum) {
+async function printRowReceipt(rowNum) {
     const sessionDate = currentSessionDate || new Date().toISOString().split('T')[0];
     const storageKey = `miki_counter_${sessionDate}_global`;
 
@@ -1146,6 +1146,7 @@ function printRowReceipt(rowNum) {
     currentCount += 1;
     localStorage.setItem(storageKey, currentCount.toString());
 
+    // STRICT RECORDING: I-save lang ang ledger file kapag NAGPRINT
     saveLedger();
     forceSaveCurrentDay();
 
@@ -1185,16 +1186,19 @@ function printRowReceipt(rowNum) {
     const now = new Date();
     const timeVal = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
-    // ESC/POS Commands: \x1B\x21\x00 (Font A Normal)
-    const initPrinter = "\x1B\x40"; // Reset printer
-    const fontNormal = "\x1B\x21\x00"; // Normal Font A (Clear & Spaced)
+    // ESC/POS Formatting Commands
+    const ESC_INIT = "\x1B\x40";          // Reset Printer
+    const ESC_ALIGN_CENTER = "\x1B\x61\x01"; // Center Alignment
+    const ESC_ALIGN_LEFT = "\x1B\x61\x00";   // Left Alignment
+    const ESC_FONT_A = "\x1B\x21\x00";       // Font A (Clean, Spaced & Clear)
 
     function generateReceiptBody(copyTitle) {
-        return `${initPrinter}${fontNormal}` +
+        return ESC_INIT + ESC_FONT_A + ESC_ALIGN_CENTER +
 `================================
          Blessed Day po         
-================================
-Date: ${dateVal}
+================================\n` +
+ESC_ALIGN_LEFT +
+`Date: ${dateVal}
 Time: ${timeVal}
 Route: ${routeName}
 Customer: ${customerName}
@@ -1215,9 +1219,10 @@ GRAND TOTAL:         P ${String(grandTotal.toFixed(2)).padStart(8)}
 Payment:             P ${String(payment.toFixed(2)).padStart(8)}
 --------------------------------
 Balance:             P ${String(utang.toFixed(2)).padStart(8)}
-================================
-  Salamat po sa Pagtangkilik!  
-================================\n\n\n`;
+================================\n` +
+ESC_ALIGN_CENTER +
+`  Salamat po sa Pagtangkilik!  
+================================\n\n\n\n`;
     }
 
     const copy1 = generateReceiptBody("CUSTOMER'S COPY");
@@ -1225,6 +1230,6 @@ Balance:             P ${String(utang.toFixed(2)).padStart(8)}
 
     const fullText = copy1 + copy2;
 
-    const rawbtUrl = "rawbt:base64," + btoa(unescape(encodeURIComponent(fullText)));
-    window.location.href = rawbtUrl;
+    // Direct Web Bluetooth Print Call
+    await sendToPrinter(fullText);
 }

@@ -28,15 +28,10 @@
 
         <p id="modalSubtext"
            style="font-size:12px;color:#6b7280;">
-            Please fill out both the Date and Name to unlock encoding.
+            System date is automatically set to today. Please enter Salesman/Route name.
         </p>
 
-        <label for="modalDateInput">
-            Date
-        </label>
-
-        <input type="date"
-               id="modalDateInput">
+        <!-- WALA NANG DATE INPUT BOX DITO -->
 
         <label for="modalNameInput">
             Route / Salesman Name
@@ -213,7 +208,7 @@
                                min="0"
                                step="any"
                                inputmode="decimal"
-                               oninput="syncFromTable('Bo')">
+                               oninput="syncFromTable('BO')">
                     </td>
 
                     <td>
@@ -255,16 +250,13 @@
 
                 <tr>
 
-                    <!-- DITO NATIN NILAGAY ANG MAGKAHATING CUSTOMER NAME AT MALAKING PRINT BUTTON -->
                     <td colspan="2" rowspan="2" style="padding: 0; vertical-align: middle; background-color: #eff6ff;">
                         <div style="display: flex; height: 100%; min-height: 70px; align-items: center; border: 1px solid #bfdbfe;">
                             
-                            <!-- KALIWA: Customer Name Display -->
                             <div id="activeCustomerDisplay" style="flex: 1; font-size: 20px; font-weight: bold; color: #1d4ed8; text-align: center; padding: 5px;">
                                 Row 1
                             </div>
                             
-                            <!-- KANAN: Malaking Print Button -->
                             <button id="mainPrintBtn" type="button" onclick="printActiveRowReceipt()" style="flex: 1; height: 100%; min-height: 70px; background-color: #2563eb; color: white; font-size: 18px; font-weight: bold; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 5px rgba(0,0,0,0.2);">
                                 🛈 PRINT
                             </button>
@@ -476,12 +468,11 @@
 
 
     <!-- =========================================================
-         SECOND TABLE / CUSTOMER LIST (WALA NA ANG PRINT COLUMN)
+         SECOND TABLE / CUSTOMER LIST
          ========================================================= -->
 
     <div class="table-box table-box-2 customer-list-watermark">
 
-        <!-- LARGE DAY NUMBER WATERMARK -->
         <div class="customer-day-watermark"
              id="customerDayWatermark">
             --
@@ -748,8 +739,6 @@
 
             <tbody>
 
-                <!-- ROW 1 -->
-
                 <tr>
 
                     <th>
@@ -783,8 +772,6 @@
 
                 </tr>
 
-
-                <!-- ROW 2 -->
 
                 <tr>
 
@@ -834,8 +821,6 @@
 
                 </tr>
 
-
-                <!-- ROW 3 -->
 
                 <tr>
 
@@ -903,8 +888,6 @@
                 </tr>
 
 
-                <!-- ROW 4 -->
-
                 <tr>
 
                     <td>
@@ -953,8 +936,6 @@
 
                 </tr>
 
-
-                <!-- ROW 5 -->
 
                 <tr>
 
@@ -1017,8 +998,6 @@
 
                 </tr>
 
-
-                <!-- ROW 6 -->
 
                 <tr>
 

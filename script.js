@@ -2,9 +2,9 @@
 // DEFAULT CUSTOMER NAMES (Rows 1 to 16)
 // ============================================================
 const DEFAULT_NAMES = [
-    "Bag", "Ces", "Ed", "Ris", "Raq", "Lin", 
-    "7/11", "Lea", "Jen", 
-    "Swe", "Lan", "Jean", "Ling²", "", "", "Flor"
+    "Russel", "Cess", "Ed", "Risa", "Rakel", "Lina", 
+    "7/11", "Leah", "Jeny", 
+    "Sweet", "Lany", "Jean", "Ling²", "", "", "Flor"
 ];
 
 // ============================================================

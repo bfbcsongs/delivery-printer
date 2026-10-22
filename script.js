@@ -1205,11 +1205,11 @@ function printRowReceipt(rowNum) {
 
     let receiptText = 
 `================================
-          Blessed Day po     
+          Blessed Day Po     
 ================================
 Date: ${dateVal}
 Time: ${timeVal}
-Route: ${routeName}
+Miki Boy: ${routeName}
 Customer: ${customerName}
 Print Copy #${currentCount}
 --------------------------------

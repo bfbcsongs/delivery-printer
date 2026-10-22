@@ -1230,7 +1230,7 @@ function printRowReceipt(rowNum) {
 
     let receiptText = 
 `================================
-       MIKI TABLE & LEDGER      
+           Blessed Day      
 ================================
 Date: ${dateVal}
 Route: ${routeName}
@@ -1244,12 +1244,12 @@ CAB        ${String(cab).padEnd(5)}
 BO         ${String(bo).padEnd(5)}              
 --------------------------------
 BILLING:              P ${String(billing.toFixed(2)).padStart(7)}
-PREV BAL:             P ${String(bal.toFixed(2)).padStart(7)}
+PREVIOUS BAL:         P ${String(bal.toFixed(2)).padStart(7)}
 --------------------------------
 GRAND TOTAL:          P ${String((billing + bal).toFixed(2)).padStart(7)}
-COLLECTION (PAID):    P ${String(payment.toFixed(2)).padStart(7)}
+Payment:              P ${String(payment.toFixed(2)).padStart(7)}
 --------------------------------
-REMAINING UTANG:      P ${String(utang.toFixed(2)).padStart(7)}
+Balance:              P ${String(utang.toFixed(2)).padStart(7)}
 ================================
     Salamat sa Pagtangkilik!
 ================================\n\n\n`;

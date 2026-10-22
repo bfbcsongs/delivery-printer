@@ -526,23 +526,39 @@ function updateActiveCustomerName(row) {
 }
 
 // ============================================================
-// SYNC & MAIN CALCULATION
+// SYNC & MAIN CALCULATION (FIXED BO SYNC)
 // ============================================================
 
 function syncFromPanel(type) {
     if (isPreviewMode) return;
-    const val = document.getElementById("sync" + type).value;
-    const targetId = type === "Dry" ? "qtyReg" : "qty" + type;
-    document.getElementById(targetId).value = val;
+    
+    // Suportahan ang BO o Bo kahit anong case ang ipasa
+    let targetType = type;
+    if (type.toUpperCase() === "BO") targetType = "Bo";
+
+    const val = document.getElementById("sync" + targetType).value;
+    const targetId = targetType === "Dry" ? "qtyReg" : "qty" + targetType;
+    
+    const targetInput = document.getElementById(targetId);
+    if (targetInput) {
+        targetInput.value = val;
+    }
     calculateMain();
 }
 
 function syncFromTable(type) {
     if (isPreviewMode) return;
-    const targetId = type === "Reg" ? "syncDry" : "sync" + type;
-    const val = document.getElementById("qty" + type).value;
+
+    let targetType = type;
+    if (type.toUpperCase() === "BO") targetType = "Bo";
+
+    const targetId = (type === "Reg" || type === "Dry") ? "syncDry" : "sync" + targetType;
+    const val = document.getElementById("qty" + targetType).value;
+    
     const syncInput = document.getElementById(targetId);
-    if (syncInput) syncInput.value = val;
+    if (syncInput) {
+        syncInput.value = val;
+    }
     calculateMain();
 }
 

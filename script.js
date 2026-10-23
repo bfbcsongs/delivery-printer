@@ -100,23 +100,30 @@ let printCounters = {};
 let currentTableViewMode = "CUSTOMERS"; // "CUSTOMERS" or "PRINT_HISTORY"
 let longPressTimer = null;
 
-window.addEventListener('DOMContentLoaded', () => {
+function setupViewSwitcher() {
     const viewToggleBtn = document.getElementById("viewToggleBtn");
 
     if (viewToggleBtn) {
-        viewToggleBtn.addEventListener("touchstart", (e) => {
+        const newBtn = viewToggleBtn.cloneNode(true);
+        viewToggleBtn.parentNode.replaceChild(newBtn, viewToggleBtn);
+
+        newBtn.addEventListener("touchstart", (e) => {
             e.preventDefault();
             startLongPressToggle();
-        });
-        viewToggleBtn.addEventListener("touchend", cancelLongPressToggle);
+        }, { passive: false });
 
-        viewToggleBtn.addEventListener("mousedown", startLongPressToggle);
-        viewToggleBtn.addEventListener("mouseup", cancelLongPressToggle);
-        viewToggleBtn.addEventListener("mouseleave", cancelLongPressToggle);
+        newBtn.addEventListener("touchend", (e) => {
+            e.preventDefault();
+            cancelLongPressToggle();
+        }, { passive: false });
+
+        newBtn.addEventListener("touchcancel", cancelLongPressToggle);
+
+        newBtn.addEventListener("mousedown", startLongPressToggle);
+        newBtn.addEventListener("mouseup", cancelLongPressToggle);
+        newBtn.addEventListener("mouseleave", cancelLongPressToggle);
     }
-
-    loadLedger();
-});
+}
 
 function startLongPressToggle() {
     const viewToggleBtn = document.getElementById("viewToggleBtn");
@@ -124,6 +131,7 @@ function startLongPressToggle() {
     viewToggleBtn.style.opacity = "0.6";
     viewToggleBtn.innerText = "⏳ HOLDING... (3s)";
 
+    clearTimeout(longPressTimer);
     longPressTimer = setTimeout(() => {
         toggleTableViewMode();
     }, 3000);
@@ -225,7 +233,6 @@ function renderPrintHistoryToTable() {
             document.getElementById(`ledgerPay_${i}`).value = formatMoney(log.payment);
             document.getElementById(`ledgerRem_${i}`).value = formatMoney(log.utang);
         } else {
-            // Malinis na blangko kung walang print log para sa slot na ito
             nameEl.value = "";
             document.getElementById(`ledgerDry_${i}`).value = "";
             document.getElementById(`ledgerFresh_${i}`).value = "";
@@ -437,7 +444,6 @@ function handleModalSubmit() {
             }
         }
 
-        // New Day, New Record: Burahin ang lumang print log para sa araw na ito kung meron man
         localStorage.removeItem(`miki_print_log_${todayDate}`);
 
         currentSessionDate = todayDate;
@@ -664,17 +670,6 @@ function formatMoney(value) {
     });
 }
 
-function updateActiveCustomerName(row) {
-    if (row === activeRow) {
-        const nameEl = document.getElementById(`ledgerName_${row}`);
-        const displayBox = document.getElementById("activeCustomerDisplay");
-        if (nameEl && displayBox) {
-            const nameVal = nameEl.value.trim();
-            displayBox.textContent = nameVal !== "" ? nameVal : `Row ${row}`;
-        }
-    }
-}
-
 // ============================================================
 // SYNC & MAIN CALCULATION (SUPPORT 'BO' ALL CAPS)
 // ============================================================
@@ -787,6 +782,7 @@ function calculateMain() {
 
     saveGlobalPrices();
     calculateLedgerTotals();
+    saveLedger();
 }
 
 function saveGlobalPrices() {
@@ -820,41 +816,6 @@ function restoreGlobalPrices() {
     if (document.getElementById("priceBo")) {
         document.getElementById("priceBo").value = savedPrices?.bo || "50";
     }
-}
-
-function loadRowToMain(row) {
-    if (!isEditingActive || isPreviewMode) return;
-
-    activeRow = row;
-    updateActiveCustomerName(row);
-
-    if (document.getElementById(`ledgerDry_${row}`)) {
-        document.getElementById("qtyReg").value = document.getElementById(`ledgerDry_${row}`).value;
-        document.getElementById("syncDry").value = document.getElementById(`ledgerDry_${row}`).value;
-    }
-    if (document.getElementById(`ledgerFresh_${row}`)) {
-        document.getElementById("qtyFresh").value = document.getElementById(`ledgerFresh_${row}`).value;
-        document.getElementById("syncFresh").value = document.getElementById(`ledgerFresh_${row}`).value;
-    }
-    if (document.getElementById(`ledgerCab_${row}`)) {
-        document.getElementById("qtyCab").value = document.getElementById(`ledgerCab_${row}`).value;
-        document.getElementById("syncCab").value = document.getElementById(`ledgerCab_${row}`).value;
-    }
-    if (document.getElementById(`ledgerBo_${row}`)) {
-        document.getElementById("qtyBo").value = document.getElementById(`ledgerBo_${row}`).value;
-        document.getElementById("syncBo").value = document.getElementById(`ledgerBo_${row}`).value;
-    }
-    if (document.getElementById(`ledgerBal_${row}`)) {
-        document.getElementById("inputBal").value = document.getElementById(`ledgerBal_${row}`).value;
-    }
-
-    const payEl = document.getElementById(`ledgerPay_${row}`);
-    if (payEl) {
-        const rawColln = payEl.value.replace(/,/g, '');
-        document.getElementById("inputPay").value = rawColln !== "" ? rawColln : "";
-    }
-
-    calculateMain();
 }
 
 function calculateLedgerTotals() {
@@ -1288,6 +1249,7 @@ function renderHistoryUI(selectedDateKey = null) {
 function loadLedger() {
     restoreGlobalPrices();
     renderHistoryUI();
+    setupViewSwitcher();
 
     const priceInputs = document.querySelectorAll('.price-input');
     priceInputs.forEach(input => {
@@ -1525,7 +1487,6 @@ function takeScreenshot() {
         scrollBox.style.overflow = 'visible';
     }
 
-    // Dynamic filtering para sa screenshot: Ikuha lamang ang mga rows na may laman o datos
     const rows = clonedTable2.querySelectorAll('tbody tr');
     rows.forEach(tr => {
         if (tr.querySelector('.net-total-red')) return;
@@ -1573,11 +1534,11 @@ function takeScreenshot() {
         alert("Hindi makagawa ng screenshot. Subukan ulit.");
     });
 }
+
 // ============================================================
 // NAME SYNCING BETWEEN MAIN NAME BAR & CUSTOMER TABLE
 // ============================================================
 
-// 1. Kapag nagta-type sa Name Bar sa tabi ng PRINT button
 function handleActiveCustomerNameChange(val) {
     const currentNameEl = document.getElementById(`ledgerName_${activeRow}`);
     if (currentNameEl) {
@@ -1586,25 +1547,22 @@ function handleActiveCustomerNameChange(val) {
     saveLedger();
 }
 
-// 2. Para i-sync ang Name Bar kapag pinalitan ang active row o pinindot ang row
 function updateActiveCustomerName(row) {
     if (row === activeRow) {
         const nameEl = document.getElementById(`ledgerName_${row}`);
-        const inputTop = document.getElementById("activeCustomerInput");
+        const topInput = document.getElementById("activeCustomerInput");
         
-        if (nameEl && inputTop) {
-            inputTop.value = nameEl.value;
+        if (nameEl && topInput) {
+            topInput.value = nameEl.value;
         }
     }
 }
 
-// 3. I-update din ang loadRowToMain para kapag pinindot ang row, mag-sync agad ang pangalan sa itaas
 function loadRowToMain(row) {
     if (!isEditingActive || isPreviewMode) return;
 
     activeRow = row;
     
-    // I-sync ang pangalan sa top input bar
     const currentName = document.getElementById(`ledgerName_${row}`)?.value || "";
     const topInput = document.getElementById("activeCustomerInput");
     if (topInput) {
@@ -1638,4 +1596,5 @@ function loadRowToMain(row) {
     }
 
     calculateMain();
+    saveLedger();
 }

@@ -1619,7 +1619,7 @@ function updateActiveCustomerName(row) {
 
 
 // ============================================================
-// 2. TARGETED & DYNAMIC SCREENSHOT (Wala ang Empty Rows)
+// TARGETED & DYNAMIC SCREENSHOT (Only Printed/Filled Rows)
 // ============================================================
 function takeScreenshot() {
     const sessionBar = document.querySelector('.session-bar');
@@ -1640,13 +1640,15 @@ function takeScreenshot() {
     if (sessionBar) captureContainer.appendChild(sessionBar.cloneNode(true));
 
     const clonedTable2 = table2.cloneNode(true);
+    
+    // Alisin ang max-height sa screenshot para lumabas nang buo
     const scrollBox = clonedTable2.querySelector('.table-scroll-container');
     if (scrollBox) {
         scrollBox.style.maxHeight = 'none';
         scrollBox.style.overflow = 'visible';
     }
 
-    // I-filter ang blangkong rows para hindi sumama sa screenshot
+    // Itago ang mga blangkong rows sa screenshot para sa na-print/may lamang record lang ang kita
     const rows = clonedTable2.querySelectorAll('tbody tr');
     rows.forEach(tr => {
         if (tr.querySelector('.net-total-red')) return;

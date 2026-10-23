@@ -2,7 +2,7 @@
 // DEFAULT CUSTOMER NAMES (Rows 1 to 50)
 // ============================================================
 const DEFAULT_NAMES = [
-    "Rassel", "Cess", "Ed", "Risa", "Rakel", "Lina", 
+    "Rasel", "Cess", "Ed", "Risa", "Rakel", "Lina", 
     "7/11", "Leah", "Jeny", 
     "Sweet", "Lany", "Jean", "Ling²", "", "", "Flor",
     "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
@@ -211,6 +211,7 @@ function recordPrintLog(rowNum, customerName, dry, fresh, cab, bo, bal, billing,
     }
 }
 
+// INAYOS: Pangalan lang mismo ang lalabas, walang #1, #2 o Oras!
 function renderPrintHistoryToTable() {
     const d = new Date();
     const year = d.getFullYear();
@@ -231,7 +232,8 @@ function renderPrintHistoryToTable() {
         if (!nameEl) continue;
 
         if (log) {
-            nameEl.value = `#${log.printId} ${log.customerName} (${log.time})`;
+            // Pangalan lang ang ipinapakita para kasya sa name input bar!
+            nameEl.value = log.customerName || "";
             document.getElementById(`ledgerDry_${i}`).value = log.dry || "";
             document.getElementById(`ledgerFresh_${i}`).value = log.fresh || "";
             document.getElementById(`ledgerCab_${i}`).value = log.cab || "";

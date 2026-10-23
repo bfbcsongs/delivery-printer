@@ -109,10 +109,83 @@
 .session-actions .clear-btn {
     background-color: #dc2626;
 }
+
+/* Exit Modal Custom Styling */
+.exit-modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+}
+
+.exit-modal-card {
+    background-color: #ffffff;
+    width: 85%;
+    max-width: 340px;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+.exit-modal-card h3 {
+    margin-top: 0;
+    color: #111827;
+    font-size: 18px;
+}
+
+.exit-modal-card p {
+    font-size: 14px;
+    color: #4b5563;
+    margin-bottom: 20px;
+}
+
+.exit-btn-group {
+    display: flex;
+    gap: 10px;
+}
+
+.exit-btn-group button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 6px;
+    border: none;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.btn-cancel-exit {
+    background-color: #e5e7eb;
+    color: #1f2937;
+}
+
+.btn-confirm-exit {
+    background-color: #dc2626;
+    color: white;
+}
 </style>
 </head>
 
 <body>
+
+<!-- EXIT CONFIRMATION MODAL -->
+<div id="exitConfirmModal" class="exit-modal-overlay">
+    <div class="exit-modal-card">
+        <h3>Exit Miki Ledger?</h3>
+        <p>Are you sure you want to close or exit the app?</p>
+        <div class="exit-btn-group">
+            <button class="btn-cancel-exit" onclick="cancelExitApp()">Cancel</button>
+            <button class="btn-confirm-exit" onclick="confirmExitApp()">Exit App</button>
+        </div>
+    </div>
+</div>
 
 <!-- DYNAMIC SETUP / CONFIRMATION MODAL -->
 <div id="setupModal" class="setup-modal-overlay">

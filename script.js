@@ -1979,3 +1979,37 @@ function loadRowToMain(row) {
     calculateMain();
     saveLedger();
 }
+// ============================================================
+// BACK BUTTON / BACK GESTURE HANDLER (PREVENT APP EXIT)
+// ============================================================
+
+// Push an initial history state so the back button has something to pop
+history.pushState({ page: 'ledger_main' }, '', location.href);
+
+window.addEventListener('popstate', (event) => {
+    // Re-push state so the app stays open on repeated back taps
+    history.pushState({ page: 'ledger_main' }, '', location.href);
+
+    // If viewing Print History Log, back button returns to Customer Table
+    if (currentTableViewMode === "PRINT_HISTORY") {
+        currentTableViewMode = "CUSTOMERS";
+        restoreCustomersToTable();
+        updateToggleBtnUI();
+        return;
+    }
+
+    // If viewing a Saved File in Preview Mode, back button exits Preview
+    if (isPreviewMode) {
+        exitHistoryPreview();
+        return;
+    }
+
+    // If a modal or dropdown is open, close it
+    const modal = document.getElementById("setupModal");
+    if (modal && modal.style.display === "flex") {
+        closeSetupModal();
+        return;
+    }
+
+    hideNameDropdown();
+});

@@ -65,7 +65,7 @@ let activeRow = 1;
 
 let tapCount = 0;
 let tapTimer = null;
-let isLocked = false; // UNLOCKED BY DEFAULT FOR CUSTOMER NAMES
+let isLocked = false; 
 
 let priceTapCount = 0;
 let priceTapTimer = null;
@@ -86,7 +86,7 @@ let isPreviewMode = false;
 let previewDateKey = null;
 let previewBackup = null;
 
-// ROW UTANG MODE TRACKER (Para sa 5-tap sa Coll'n)
+// ROW UTANG MODE TRACKER (5-tap sa Coll'n)
 let rowUtangMode = {};
 let rowTapCounts = {};
 let rowTapTimers = {};
@@ -333,7 +333,7 @@ function throttledResetInactivityTimer() {
 });
 
 // ============================================================
-// ENABLE / DISABLE ENCODING (NAKA-ALLOW NA ULIT ANG NAMES)
+// ENABLE / DISABLE ENCODING
 // ============================================================
 
 function setEncodingEditable(editable) {
@@ -348,7 +348,6 @@ function setEncodingEditable(editable) {
         }
     });
 
-    // Sinisiguradong e-edit pa rin ang customer name inputs
     const nameInputs = document.querySelectorAll('.name-input');
     nameInputs.forEach(input => {
         input.disabled = !editable;
@@ -686,7 +685,7 @@ function formatMoney(value) {
 }
 
 // ============================================================
-// SYNC & MAIN CALCULATION (SUPPORT 'BO' ALL CAPS)
+// SYNC & MAIN CALCULATION
 // ============================================================
 
 function syncFromPanel(type) {
@@ -1176,7 +1175,10 @@ function exitHistoryPreview() {
     renderHistoryUI();
 }
 
-// READ-ONLY FILE HISTORY SIDEBAR (NO EDIT/DELETE BUTTONS)
+// ============================================================
+// HISTORY UI WITH PREVIEW, EDIT, AND DELETE FEATURES
+// ============================================================
+
 function renderHistoryUI(selectedDateKey = null) {
     const historyContainer = document.getElementById("historyContainer");
     const historyCount = document.getElementById("historyCount");
@@ -1202,13 +1204,17 @@ function renderHistoryUI(selectedDateKey = null) {
         const isPreviewFile = isPreviewMode && item.date === previewDateKey;
 
         div.className = `history-item ${isSelected ? 'selected-file' : ''} ${isPreviewFile ? 'preview-file' : ''}`;
+        div.style.display = "flex";
+        div.style.justifyContent = "space-between";
+        div.style.alignItems = "center";
 
-        // PERMANENT READ-ONLY: CLICK TO VIEW ONLY
-        div.addEventListener("click", function() {
+        const infoDiv = document.createElement("div");
+        infoDiv.style.flex = "1";
+        infoDiv.style.cursor = "pointer";
+        infoDiv.addEventListener("click", function() {
             previewHistoryFile(item.date);
         });
 
-        const infoDiv = document.createElement("div");
         const strong = document.createElement("strong");
         const savedDate = new Date(item.date + "T00:00:00");
         const monthNames = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"];
@@ -1220,10 +1226,105 @@ function renderHistoryUI(selectedDateKey = null) {
         strong.textContent = formattedSavedDate;
         infoDiv.appendChild(strong);
         infoDiv.appendChild(document.createTextNode(" - " + item.name));
-
         div.appendChild(infoDiv);
+
+        const actionsDiv = document.createElement("div");
+        actionsDiv.style.display = "flex";
+        actionsDiv.style.gap = "4px";
+
+        const prevBtn = document.createElement("button");
+        prevBtn.textContent = "👁️";
+        prevBtn.title = "Preview File";
+        prevBtn.className = "btn-sm";
+        prevBtn.style.padding = "2px 6px";
+        prevBtn.style.fontSize = "10px";
+        prevBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            previewHistoryFile(item.date);
+        });
+        actionsDiv.appendChild(prevBtn);
+
+        const editBtn = document.createElement("button");
+        editBtn.textContent = "✏️";
+        editBtn.title = "Edit File";
+        editBtn.className = "btn-sm";
+        editBtn.style.padding = "2px 6px";
+        editBtn.style.fontSize = "10px";
+        editBtn.style.backgroundColor = "#2563eb";
+        editBtn.style.color = "white";
+        editBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            editHistoryFile(item.date);
+        });
+        actionsDiv.appendChild(editBtn);
+
+        const delBtn = document.createElement("button");
+        delBtn.textContent = "🗑️";
+        delBtn.title = "Delete File";
+        delBtn.className = "btn-sm";
+        delBtn.style.padding = "2px 6px";
+        delBtn.style.fontSize = "10px";
+        delBtn.style.backgroundColor = "#dc2626";
+        delBtn.style.color = "white";
+        delBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            deleteHistoryFile(item.date);
+        });
+        actionsDiv.appendChild(delBtn);
+
+        div.appendChild(actionsDiv);
         historyContainer.appendChild(div);
     });
+}
+
+function editHistoryFile(dateKey) {
+    const history = JSON.parse(localStorage.getItem("miki_30day_history") || "[]");
+    const selectedFile = history.find(item => item.date === dateKey);
+
+    if (!selectedFile) return;
+
+    previewBackup = null;
+    previewDateKey = null;
+
+    setPreviewMode(false);
+    restoreLedgerData(selectedFile);
+
+    document.getElementById("setupModal").style.display = "none";
+    setEncodingEditable(true);
+
+    loadRowToMain(1);
+    calculateLedgerTotals();
+    calculateExtraTable();
+
+    saveLedger();
+    forceSaveCurrentDay();
+    renderHistoryUI(dateKey);
+    resetInactivityTimer();
+
+    alert(`Opened ${dateKey} (${selectedFile.name}) for editing.`);
+}
+
+function deleteHistoryFile(dateKey) {
+    if (!confirm(`Are you sure you want to delete the saved file for ${dateKey}?`)) return;
+
+    let history = JSON.parse(localStorage.getItem("miki_30day_history") || "[]");
+    history = history.filter(item => item.date !== dateKey);
+    localStorage.setItem("miki_30day_history", JSON.stringify(history));
+
+    if (currentSessionDate === dateKey) {
+        currentSessionDate = "";
+        currentSessionName = "";
+        localStorage.removeItem("miki_ledger_data");
+        clearAllLedgerInputs();
+        setEncodingEditable(false);
+        updateSessionDateDisplay();
+        showOpenModal();
+    } else if (previewDateKey === dateKey) {
+        exitHistoryPreview();
+    }
+
+    renderHistoryUI();
+    alert(`File for ${dateKey} has been deleted.`);
 }
 
 function loadLedger() {
@@ -1242,7 +1343,7 @@ function loadLedger() {
 }
 
 // ============================================================
-// DIRECT WEB BLUETOOTH PRINTER MANAGEMENT (STABLE CLEAN)
+// DIRECT WEB BLUETOOTH PRINTER MANAGEMENT
 // ============================================================
 
 let bluetoothDevice = null;
@@ -1292,7 +1393,6 @@ async function connectBluetoothPrinter() {
         alert("Bluetooth Error: " + error.message);
     }
 }
-
 
 async function sendToPrinter(textData) {
     if (!bluetoothCharacteristic) {
@@ -1345,9 +1445,6 @@ async function printActiveRowReceipt() {
     }
 }
 
-// ==========================================
-// DIRECT WEB BLUETOOTH PRINTER INTEGRATION & LOGGING
-// ==========================================
 async function printRowReceipt(rowNum) {
     const d = new Date();
     const year = d.getFullYear();

@@ -110,7 +110,7 @@ let allowExit = false;
 window.addEventListener('DOMContentLoaded', () => {
     setupViewSwitcher();
     setupKeyboardShortcuts();
-    setupBackIntercept();
+    setupInstantBackIntercept();
     loadLedger();
     
     // Close dropdown on click outside
@@ -140,34 +140,48 @@ function setupKeyboardShortcuts() {
 }
 
 // ============================================================
-// BACK BUTTON INTERCEPT & EXIT MODAL
+// INSTANT & CONTINUOUS BACK BUTTON INTERCEPT
 // ============================================================
 
-function setupBackIntercept() {
-    // Seed history state
+function ensureHistoryBuffer() {
+    // Keep multiple depth entries so rapid back presses never escape
     window.history.pushState({ page: 'miki_ledger' }, '', window.location.href);
+    window.history.pushState({ page: 'miki_ledger' }, '', window.location.href);
+}
+
+function setupInstantBackIntercept() {
+    ensureHistoryBuffer();
+
+    // Re-lock history on every tap across the screen
+    ['touchstart', 'click', 'keydown'].forEach(evt => {
+        document.addEventListener(evt, () => {
+            if (!allowExit) {
+                window.history.pushState({ page: 'miki_ledger' }, '', window.location.href);
+            }
+        }, { passive: true });
+    });
 
     window.addEventListener('popstate', (e) => {
-        if (allowExit) return; // Allow exit if user pressed "Exit App" in modal
+        if (allowExit) return;
 
-        // Always re-push state to trap future back taps
+        // Immediately replenish state synchronously with NO delay
         window.history.pushState({ page: 'miki_ledger' }, '', window.location.href);
 
-        // 1. If Print History view is open, switch back to Customers table
-        if (currentTableViewMode === "PRINT_HISTORY") {
+        // 1. Switch Print History back to Customers table
+        if (typeof currentTableViewMode !== 'undefined' && currentTableViewMode === "PRINT_HISTORY") {
             currentTableViewMode = "CUSTOMERS";
             restoreCustomersToTable();
             updateToggleBtnUI();
             return;
         }
 
-        // 2. If in Preview Mode, exit preview
+        // 2. Exit Preview Mode
         if (isPreviewMode) {
             exitHistoryPreview();
             return;
         }
 
-        // 3. If setup modal is open, close setup modal
+        // 3. Close setup modal if open
         const setupModal = document.getElementById("setupModal");
         if (setupModal && setupModal.style.display === "flex") {
             closeSetupModal();
@@ -177,7 +191,7 @@ function setupBackIntercept() {
         // 4. Hide name bar dropdown
         hideNameDropdown();
 
-        // 5. Open Exit Confirmation Modal
+        // 5. Always trigger Exit Modal when on main screen
         showExitModal();
     });
 }
@@ -190,6 +204,8 @@ function showExitModal() {
 function cancelExitApp() {
     const exitModal = document.getElementById("exitConfirmModal");
     if (exitModal) exitModal.style.display = "none";
+    // Re-lock buffer immediately when user cancels
+    ensureHistoryBuffer();
 }
 
 function confirmExitApp() {
@@ -197,11 +213,11 @@ function confirmExitApp() {
     const exitModal = document.getElementById("exitConfirmModal");
     if (exitModal) exitModal.style.display = "none";
 
-    // Attempt to close app or step back out of screen pinning/browser history
-    window.history.back();
+    // Unpin/exit app back navigation
+    window.history.go(-2);
     setTimeout(() => {
         window.close();
-    }, 200);
+    }, 150);
 }
 
 // ============================================================

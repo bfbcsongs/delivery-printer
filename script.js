@@ -211,7 +211,6 @@ function recordPrintLog(rowNum, customerName, dry, fresh, cab, bo, bal, billing,
     }
 }
 
-// INAYOS: Pangalan lang mismo ang lalabas, walang #1, #2 o Oras!
 function renderPrintHistoryToTable() {
     const d = new Date();
     const year = d.getFullYear();
@@ -232,7 +231,6 @@ function renderPrintHistoryToTable() {
         if (!nameEl) continue;
 
         if (log) {
-            // Pangalan lang ang ipinapakita para kasya sa name input bar!
             nameEl.value = log.customerName || "";
             document.getElementById(`ledgerDry_${i}`).value = log.dry || "";
             document.getElementById(`ledgerFresh_${i}`).value = log.fresh || "";
@@ -1356,11 +1354,20 @@ async function sendToPrinter(textData) {
 }
 
 // ============================================================
-// PRINT ACTIVE ROW RECEIPT
+// PRINT ACTIVE ROW RECEIPT (NA MAY DOUBLE-TRIGGER PROTECTION)
 // ============================================================
-function printActiveRowReceipt() {
+let isPrintingActive = false;
+
+async function printActiveRowReceipt() {
+    if (isPrintingActive) return;
+    
     if (activeRow) {
-        printRowReceipt(activeRow);
+        isPrintingActive = true;
+        await printRowReceipt(activeRow);
+        
+        setTimeout(() => {
+            isPrintingActive = false;
+        }, 1200);
     } else {
         alert("Pumili muna ng customer bago mag-print!");
     }
@@ -1416,6 +1423,7 @@ async function printRowReceipt(rowNum) {
 
     const grandTotal = billing + bal;
 
+    // ISANG BESES NA LANG ITO TATAWAGIN PARA HINDI NADODOBLE SA LOGS
     recordPrintLog(rowNum, customerName, dry, fresh, cab, bo, bal, billing, payment, utang, currentCount);
 
     const dateVal = document.getElementById("displayFileDate") ? document.getElementById("displayFileDate").innerText : "TODAY";

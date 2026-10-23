@@ -99,22 +99,74 @@ let printCounters = {};
 // APP INITIALIZATION (DOM CONTENT LOADED)
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => {
-    populateDatalist();
     setupViewSwitcher();
     loadLedger();
+    
+    // Close dropdown on click outside
+    document.addEventListener("click", (e) => {
+        const container = document.querySelector(".name-bar-container");
+        if (container && !container.contains(e.target)) {
+            hideNameDropdown();
+        }
+    });
 });
 
-function populateDatalist() {
-    const datalist = document.getElementById('defaultNamesList');
-    if (datalist && datalist.children.length === 0) {
-        DEFAULT_NAMES.forEach(name => {
-            if (name && name.trim() !== "") {
-                const opt = document.createElement('option');
-                opt.value = name;
-                datalist.appendChild(opt);
-            }
-        });
+// ============================================================
+// CUSTOM NAME DROPDOWN SYSTEM FOR ACTIVE NAME BAR
+// ============================================================
+
+function buildNameDropdown(filterText = "") {
+    const dropdown = document.getElementById("customNameDropdown");
+    if (!dropdown) return;
+
+    dropdown.innerHTML = "";
+    const filterLower = filterText.trim().toLowerCase();
+
+    const filtered = DEFAULT_NAMES.filter(name => 
+        name && name.trim() !== "" && name.toLowerCase().includes(filterLower)
+    );
+
+    if (filtered.length === 0) {
+        dropdown.style.display = "none";
+        return;
     }
+
+    filtered.forEach(name => {
+        const item = document.createElement("div");
+        item.className = "custom-dropdown-item";
+        item.textContent = name;
+        item.onmousedown = (e) => {
+            e.preventDefault(); // Prevents input blur
+            selectDropdownName(name);
+        };
+        dropdown.appendChild(item);
+    });
+
+    dropdown.style.display = "block";
+}
+
+function showNameDropdown() {
+    if (isPreviewMode || currentTableViewMode === "PRINT_HISTORY" || !isEditingActive) return;
+    const inputVal = document.getElementById("activeCustomerInput")?.value || "";
+    buildNameDropdown(inputVal);
+}
+
+function filterNameDropdown(val) {
+    buildNameDropdown(val);
+}
+
+function hideNameDropdown() {
+    const dropdown = document.getElementById("customNameDropdown");
+    if (dropdown) dropdown.style.display = "none";
+}
+
+function selectDropdownName(name) {
+    const topInput = document.getElementById("activeCustomerInput");
+    if (topInput) {
+        topInput.value = name;
+    }
+    handleActiveCustomerNameChange(name);
+    hideNameDropdown();
 }
 
 // ============================================================
@@ -158,7 +210,6 @@ function renderCustomerTableBody() {
                 <td>
                     <input type="text" class="name-input" id="ledgerName_${i}" 
                            value="${escapeHtml(row.name)}"
-                           list="defaultNamesList"
                            oninput="updateActiveCustomerName(${i}); saveLedger();" 
                            onfocus="loadRowToMain(${i})" readonly style="background-color:${activeRow === i ? 'white' : '#e5e7eb'};">
                 </td>
@@ -221,12 +272,21 @@ function addNewCustomerRow() {
     renderCustomerTableBody();
     loadRowToMain(customerRows.length);
     saveLedger();
+
+    // Auto focus name bar on new row
+    setTimeout(() => {
+        const topInput = document.getElementById("activeCustomerInput");
+        if (topInput) {
+            topInput.focus();
+            showNameDropdown();
+        }
+    }, 100);
 }
 
 // ============================================================
 // VIEW SWITCHER & PRINT AUDIT LOG SYSTEM
 // ============================================================
-let currentTableViewMode = "CUSTOMERS"; // "CUSTOMERS" or "PRINT_HISTORY"
+let currentTableViewMode = "CUSTOMERS";
 let longPressTimer = null;
 
 function setupViewSwitcher() {
@@ -332,7 +392,6 @@ function recordPrintLog(rowNum, customerName, dry, fresh, cab, bo, bal, billing,
     }
 }
 
-// STRICTLY READ-ONLY PRINT HISTORY VIEW
 function renderPrintHistoryToTable() {
     const d = new Date();
     const year = d.getFullYear();
@@ -346,7 +405,6 @@ function renderPrintHistoryToTable() {
 
     setEncodingEditable(false);
 
-    // Temporarily replace customerRows with logs for print history view
     let tempRows = logs.map(log => ({
         name: log.customerName || "",
         dry: log.dry || "",
@@ -1167,7 +1225,7 @@ function restoreLedgerData(data) {
             }
         }
         if (customerRows.length === 0) {
-            customerRows = [{ name: DEFAULT_NAMES[0] || "", dry: "", fresh: "", cab: "", bo: "", bal: "", billing: 0, pay: "", rem: 0, utangMode: false }];
+            customerRows = [{ name: DEFAULT_NAMES[0] || "", dry: "", fresh: "", cab: "", bo: "", bal: "", billing: "0", pay: "", rem: "0", utangMode: false }];
         }
     }
 
@@ -1684,7 +1742,6 @@ function takeScreenshot() {
 
     const clonedTable2 = table2.cloneNode(true);
     
-    // Hide the "+ TAP HERE TO ADD NEW ROW" button in screenshot
     const addRowTr = clonedTable2.querySelector('#addRowTr');
     if (addRowTr) addRowTr.style.display = 'none';
 
@@ -1775,7 +1832,6 @@ function loadRowToMain(row) {
     harvestTableValues();
     activeRow = row;
 
-    // Highlight active row background in table
     for (let i = 1; i <= customerRows.length; i++) {
         const nameInput = document.getElementById(`ledgerName_${i}`);
         if (nameInput) {

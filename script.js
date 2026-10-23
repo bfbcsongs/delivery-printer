@@ -1544,3 +1544,153 @@ function takeScreenshot() {
         alert("Hindi makagawa ng screenshot. Subukan ulit.");
     });
 }
+// ============================================================
+// 1. DYNAMIC ROWS LOGIC & RENDERING
+// ============================================================
+let totalActiveRows = 1;
+
+function renderDynamicTableRows() {
+    const tbody = document.getElementById("ledgerTableBody");
+    if (!tbody) return;
+
+    tbody.innerHTML = "";
+
+    for (let i = 1; i <= totalActiveRows; i++) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>
+                <input type="text" class="name-input" id="ledgerName_${i}" 
+                       oninput="handleRowNameInput(${i})" 
+                       onfocus="loadRowToMain(${i})" readonly style="background-color:#e5e7eb;">
+            </td>
+            <td><input type="text" class="readonly-col" id="ledgerDry_${i}" readonly onfocus="loadRowToMain(${i})"></td>
+            <td><input type="text" class="readonly-col" id="ledgerFresh_${i}" readonly onfocus="loadRowToMain(${i})"></td>
+            <td><input type="text" class="readonly-col" id="ledgerCab_${i}" readonly onfocus="loadRowToMain(${i})"></td>
+            <td><input type="text" class="readonly-col" id="ledgerBo_${i}" readonly onfocus="loadRowToMain(${i})"></td>
+            <td><input type="text" class="readonly-col" id="ledgerBal_${i}" readonly onfocus="loadRowToMain(${i})"></td>
+            <td><input type="text" class="readonly-col amount" id="ledgerBilling_${i}" readonly></td>
+            <td><input type="text" class="readonly-col colln-input" id="ledgerPay_${i}" readonly onclick="handleRowCollTap(${i})" onfocus="loadRowToMain(${i})"></td>
+            <td><input type="text" class="readonly-col amount" id="ledgerRem_${i}" readonly></td>
+        `;
+        tbody.appendChild(tr);
+    }
+}
+
+// Bawat type sa Name Bar sa tabi ng Print Button
+function handleActiveCustomerNameChange(val) {
+    const currentNameEl = document.getElementById(`ledgerName_${activeRow}`);
+    if (currentNameEl) {
+        currentNameEl.value = val;
+    }
+
+    // Kapag pinunan ang huling row, magdagdag ng 1 bagong blangkong row sa ilalim
+    if (activeRow === totalActiveRows && val.trim() !== "") {
+        totalActiveRows++;
+        renderDynamicTableRows();
+        if (typeof restoreCurrentInputsToDOM === 'function') restoreCurrentInputsToDOM();
+    }
+    
+    saveLedger();
+}
+
+// Kapag nag-type direkta sa name row ng 2nd table
+function handleRowNameInput(row) {
+    if (row === activeRow) {
+        const inputTop = document.getElementById("activeCustomerInput");
+        if (inputTop) inputTop.value = document.getElementById(`ledgerName_${row}`).value;
+    }
+
+    if (row === totalActiveRows && document.getElementById(`ledgerName_${row}`).value.trim() !== "") {
+        totalActiveRows++;
+        renderDynamicTableRows();
+        if (typeof restoreCurrentInputsToDOM === 'function') restoreCurrentInputsToDOM();
+    }
+
+    saveLedger();
+}
+
+function updateActiveCustomerName(row) {
+    if (row === activeRow) {
+        const nameVal = document.getElementById(`ledgerName_${row}`)?.value || "";
+        const inputTop = document.getElementById("activeCustomerInput");
+        if (inputTop) inputTop.value = nameVal;
+    }
+}
+
+
+// ============================================================
+// 2. TARGETED & DYNAMIC SCREENSHOT (Wala ang Empty Rows)
+// ============================================================
+function takeScreenshot() {
+    const sessionBar = document.querySelector('.session-bar');
+    const table2 = document.querySelector('.table-box-2');
+    const table3 = document.querySelector('.table-box-3');
+    const noteBar = document.getElementById('newTableNoteBar');
+
+    if (!table2 || !table3) {
+        alert("Hindi mahanap ang tables para sa screenshot.");
+        return;
+    }
+
+    const captureContainer = document.createElement('div');
+    captureContainer.style.padding = '10px';
+    captureContainer.style.backgroundColor = '#f3f4f6';
+    captureContainer.style.width = document.querySelector('.main-wrapper').clientWidth + 'px';
+
+    if (sessionBar) captureContainer.appendChild(sessionBar.cloneNode(true));
+
+    const clonedTable2 = table2.cloneNode(true);
+    const scrollBox = clonedTable2.querySelector('.table-scroll-container');
+    if (scrollBox) {
+        scrollBox.style.maxHeight = 'none';
+        scrollBox.style.overflow = 'visible';
+    }
+
+    // I-filter ang blangkong rows para hindi sumama sa screenshot
+    const rows = clonedTable2.querySelectorAll('tbody tr');
+    rows.forEach(tr => {
+        if (tr.querySelector('.net-total-red')) return;
+
+        const nameInput = tr.querySelector('.name-input');
+        const dryInput = tr.querySelector('[id^="ledgerDry_"]');
+        const billingInput = tr.querySelector('[id^="ledgerBilling_"]');
+
+        const nameVal = nameInput ? nameInput.value.trim() : '';
+        const dryVal = dryInput ? dryInput.value.trim() : '';
+        const billingVal = billingInput ? billingInput.value.trim() : '';
+
+        const hasData = (nameVal !== '') || (dryVal !== '' && dryVal !== '0') || (billingVal !== '' && billingVal !== '0');
+
+        if (!hasData) {
+            tr.style.display = 'none';
+        }
+    });
+
+    captureContainer.appendChild(clonedTable2);
+    captureContainer.appendChild(table3.cloneNode(true));
+    if (noteBar) captureContainer.appendChild(noteBar.cloneNode(true));
+
+    captureContainer.style.position = 'absolute';
+    captureContainer.style.left = '-9999px';
+    captureContainer.style.top = '-9999px';
+    document.body.appendChild(captureContainer);
+
+    html2canvas(captureContainer, {
+        scale: 2,
+        useCORS: true
+    }).then(canvas => {
+        const link = document.createElement('a');
+        const fileName = `miki-summary-${currentSessionDate || 'shot'}.png`;
+        link.download = fileName;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+
+        document.body.removeChild(captureContainer);
+    }).catch(err => {
+        console.error("Screenshot Error:", err);
+        if (captureContainer.parentNode) {
+            document.body.removeChild(captureContainer);
+        }
+        alert("Hindi makagawa ng screenshot. Subukan ulit.");
+    });
+}

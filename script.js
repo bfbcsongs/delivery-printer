@@ -1573,3 +1573,69 @@ function takeScreenshot() {
         alert("Hindi makagawa ng screenshot. Subukan ulit.");
     });
 }
+// ============================================================
+// NAME SYNCING BETWEEN MAIN NAME BAR & CUSTOMER TABLE
+// ============================================================
+
+// 1. Kapag nagta-type sa Name Bar sa tabi ng PRINT button
+function handleActiveCustomerNameChange(val) {
+    const currentNameEl = document.getElementById(`ledgerName_${activeRow}`);
+    if (currentNameEl) {
+        currentNameEl.value = val;
+    }
+    saveLedger();
+}
+
+// 2. Para i-sync ang Name Bar kapag pinalitan ang active row o pinindot ang row
+function updateActiveCustomerName(row) {
+    if (row === activeRow) {
+        const nameEl = document.getElementById(`ledgerName_${row}`);
+        const inputTop = document.getElementById("activeCustomerInput");
+        
+        if (nameEl && inputTop) {
+            inputTop.value = nameEl.value;
+        }
+    }
+}
+
+// 3. I-update din ang loadRowToMain para kapag pinindot ang row, mag-sync agad ang pangalan sa itaas
+function loadRowToMain(row) {
+    if (!isEditingActive || isPreviewMode) return;
+
+    activeRow = row;
+    
+    // I-sync ang pangalan sa top input bar
+    const currentName = document.getElementById(`ledgerName_${row}`)?.value || "";
+    const topInput = document.getElementById("activeCustomerInput");
+    if (topInput) {
+        topInput.value = currentName;
+    }
+
+    if (document.getElementById(`ledgerDry_${row}`)) {
+        document.getElementById("qtyReg").value = document.getElementById(`ledgerDry_${row}`).value;
+        document.getElementById("syncDry").value = document.getElementById(`ledgerDry_${row}`).value;
+    }
+    if (document.getElementById(`ledgerFresh_${row}`)) {
+        document.getElementById("qtyFresh").value = document.getElementById(`ledgerFresh_${row}`).value;
+        document.getElementById("syncFresh").value = document.getElementById(`ledgerFresh_${row}`).value;
+    }
+    if (document.getElementById(`ledgerCab_${row}`)) {
+        document.getElementById("qtyCab").value = document.getElementById(`ledgerCab_${row}`).value;
+        document.getElementById("syncCab").value = document.getElementById(`ledgerCab_${row}`).value;
+    }
+    if (document.getElementById(`ledgerBo_${row}`)) {
+        document.getElementById("qtyBo").value = document.getElementById(`ledgerBo_${row}`).value;
+        document.getElementById("syncBo").value = document.getElementById(`ledgerBo_${row}`).value;
+    }
+    if (document.getElementById(`ledgerBal_${row}`)) {
+        document.getElementById("inputBal").value = document.getElementById(`ledgerBal_${row}`).value;
+    }
+
+    const payEl = document.getElementById(`ledgerPay_${row}`);
+    if (payEl) {
+        const rawColln = payEl.value.replace(/,/g, '');
+        document.getElementById("inputPay").value = rawColln !== "" ? rawColln : "";
+    }
+
+    calculateMain();
+}

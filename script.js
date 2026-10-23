@@ -225,7 +225,8 @@ function renderPrintHistoryToTable() {
             document.getElementById(`ledgerPay_${i}`).value = formatMoney(log.payment);
             document.getElementById(`ledgerRem_${i}`).value = formatMoney(log.utang);
         } else {
-            nameEl.value = `--- [Empty Log Slot ${i}] ---`;
+            // Malinis na blangko kung walang print log para sa slot na ito
+            nameEl.value = "";
             document.getElementById(`ledgerDry_${i}`).value = "";
             document.getElementById(`ledgerFresh_${i}`).value = "";
             document.getElementById(`ledgerCab_${i}`).value = "";
@@ -236,6 +237,7 @@ function renderPrintHistoryToTable() {
             document.getElementById(`ledgerRem_${i}`).value = "";
         }
     }
+    calculateLedgerTotals();
 }
 
 function restoreCustomersToTable() {
@@ -435,6 +437,9 @@ function handleModalSubmit() {
             }
         }
 
+        // New Day, New Record: Burahin ang lumang print log para sa araw na ito kung meron man
+        localStorage.removeItem(`miki_print_log_${todayDate}`);
+
         currentSessionDate = todayDate;
         currentSessionName = nameVal;
 
@@ -445,6 +450,7 @@ function handleModalSubmit() {
         setEncodingEditable(true);
         resetInactivityTimer();
 
+        clearAllLedgerInputs();
         applyDefaultNamesIfEmpty();
         saveLedger();
         forceSaveCurrentDay();
@@ -1305,7 +1311,6 @@ async function connectBluetoothPrinter() {
     try {
         console.log("Searching for Bluetooth Thermal Printer...");
         
-        // Nilagyan natin ng filters para iyon lang mga may kinalaman sa printer ang lumabas
         bluetoothDevice = await navigator.bluetooth.requestDevice({
             filters: [
                 { namePrefix: 'PT' },
@@ -1315,9 +1320,9 @@ async function connectBluetoothPrinter() {
                 { namePrefix: 'BlueTooth Printer' }
             ],
             optionalServices: [
-                '000018f0-0000-1000-8000-00805f9b34fb', // Standard Serial / Printer UUID
+                '000018f0-0000-1000-8000-00805f9b34fb',
                 'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
-                '00001101-0000-1000-8000-00805f9b34fb'  // SPP UUID
+                '00001101-0000-1000-8000-00805f9b34fb'
             ]
         });
 
@@ -1440,7 +1445,6 @@ async function printRowReceipt(rowNum) {
 
     const grandTotal = billing + bal;
 
-    // Record print log for history tracing
     recordPrintLog(rowNum, customerName, dry, fresh, cab, bo, bal, billing, payment, utang, currentCount);
 
     const dateVal = document.getElementById("displayFileDate") ? document.getElementById("displayFileDate").innerText : "TODAY";
@@ -1491,135 +1495,9 @@ ESC_ALIGN_CENTER +
 
     await sendToPrinter(singleReceiptText);
 }
+
 // ============================================================
 // TARGETED SCREENSHOT FUNCTION (Date Bar, 2nd Table, 3rd Table & Notes Only)
-// ============================================================
-function takeScreenshot() {
-    // Kukuha lang tayo ng Session Bar (Date & Name), 2nd Table, 3rd Table, at Note Bar
-    const sessionBar = document.querySelector('.session-bar');
-    const table2 = document.querySelector('.table-box-2');
-    const table3 = document.querySelector('.table-box-3');
-    const noteBar = document.getElementById('newTableNoteBar');
-
-    if (!table2 || !table3) {
-        alert("Hindi mahanap ang tables para sa screenshot.");
-        return;
-    }
-
-    // Gagawa ng temporary wrapper element para pagsama-samahin sila
-    const captureContainer = document.createElement('div');
-    captureContainer.style.padding = '10px';
-    captureContainer.style.backgroundColor = '#f3f4f6';
-    captureContainer.style.width = document.querySelector('.main-wrapper').clientWidth + 'px';
-
-    // Idagdag ang mga napiling bahagi (wala na ang switch button)
-    if (sessionBar) captureContainer.appendChild(sessionBar.cloneNode(true));
-    captureContainer.appendChild(table2.cloneNode(true));
-    captureContainer.appendChild(table3.cloneNode(true));
-    if (noteBar) captureContainer.appendChild(noteBar.cloneNode(true));
-
-    // Ilalagay sa labas ng screen sandali para ma-render ng html2canvas
-    captureContainer.style.position = 'absolute';
-    captureContainer.style.left = '-9999px';
-    captureContainer.style.top = '-9999px';
-    document.body.appendChild(captureContainer);
-
-    html2canvas(captureContainer, {
-        scale: 2, // Para mataas ang kalidad at linaw
-        useCORS: true
-    }).then(canvas => {
-        const link = document.createElement('a');
-        const fileName = `miki-summary-${currentSessionDate || 'shot'}.png`;
-        link.download = fileName;
-        link.href = canvas.toDataURL('image/png');
-        link.click();
-
-        // Linisin ang temporary container
-        document.body.removeChild(captureContainer);
-    }).catch(err => {
-        console.error("Screenshot Error:", err);
-        if (captureContainer.parentNode) {
-            document.body.removeChild(captureContainer);
-        }
-        alert("Hindi makagawa ng screenshot. Subukan ulit.");
-    });
-}
-// ============================================================
-// 1. DYNAMIC ROWS LOGIC & RENDERING
-// ============================================================
-let totalActiveRows = 1;
-
-function renderDynamicTableRows() {
-    const tbody = document.getElementById("ledgerTableBody");
-    if (!tbody) return;
-
-    tbody.innerHTML = "";
-
-    for (let i = 1; i <= totalActiveRows; i++) {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td>
-                <input type="text" class="name-input" id="ledgerName_${i}" 
-                       oninput="handleRowNameInput(${i})" 
-                       onfocus="loadRowToMain(${i})" readonly style="background-color:#e5e7eb;">
-            </td>
-            <td><input type="text" class="readonly-col" id="ledgerDry_${i}" readonly onfocus="loadRowToMain(${i})"></td>
-            <td><input type="text" class="readonly-col" id="ledgerFresh_${i}" readonly onfocus="loadRowToMain(${i})"></td>
-            <td><input type="text" class="readonly-col" id="ledgerCab_${i}" readonly onfocus="loadRowToMain(${i})"></td>
-            <td><input type="text" class="readonly-col" id="ledgerBo_${i}" readonly onfocus="loadRowToMain(${i})"></td>
-            <td><input type="text" class="readonly-col" id="ledgerBal_${i}" readonly onfocus="loadRowToMain(${i})"></td>
-            <td><input type="text" class="readonly-col amount" id="ledgerBilling_${i}" readonly></td>
-            <td><input type="text" class="readonly-col colln-input" id="ledgerPay_${i}" readonly onclick="handleRowCollTap(${i})" onfocus="loadRowToMain(${i})"></td>
-            <td><input type="text" class="readonly-col amount" id="ledgerRem_${i}" readonly></td>
-        `;
-        tbody.appendChild(tr);
-    }
-}
-
-// Bawat type sa Name Bar sa tabi ng Print Button
-function handleActiveCustomerNameChange(val) {
-    const currentNameEl = document.getElementById(`ledgerName_${activeRow}`);
-    if (currentNameEl) {
-        currentNameEl.value = val;
-    }
-
-    // Kapag pinunan ang huling row, magdagdag ng 1 bagong blangkong row sa ilalim
-    if (activeRow === totalActiveRows && val.trim() !== "") {
-        totalActiveRows++;
-        renderDynamicTableRows();
-        if (typeof restoreCurrentInputsToDOM === 'function') restoreCurrentInputsToDOM();
-    }
-    
-    saveLedger();
-}
-
-// Kapag nag-type direkta sa name row ng 2nd table
-function handleRowNameInput(row) {
-    if (row === activeRow) {
-        const inputTop = document.getElementById("activeCustomerInput");
-        if (inputTop) inputTop.value = document.getElementById(`ledgerName_${row}`).value;
-    }
-
-    if (row === totalActiveRows && document.getElementById(`ledgerName_${row}`).value.trim() !== "") {
-        totalActiveRows++;
-        renderDynamicTableRows();
-        if (typeof restoreCurrentInputsToDOM === 'function') restoreCurrentInputsToDOM();
-    }
-
-    saveLedger();
-}
-
-function updateActiveCustomerName(row) {
-    if (row === activeRow) {
-        const nameVal = document.getElementById(`ledgerName_${row}`)?.value || "";
-        const inputTop = document.getElementById("activeCustomerInput");
-        if (inputTop) inputTop.value = nameVal;
-    }
-}
-
-
-// ============================================================
-// TARGETED & DYNAMIC SCREENSHOT (Only Printed/Filled Rows)
 // ============================================================
 function takeScreenshot() {
     const sessionBar = document.querySelector('.session-bar');
@@ -1641,14 +1519,13 @@ function takeScreenshot() {
 
     const clonedTable2 = table2.cloneNode(true);
     
-    // Alisin ang max-height sa screenshot para lumabas nang buo
     const scrollBox = clonedTable2.querySelector('.table-scroll-container');
     if (scrollBox) {
         scrollBox.style.maxHeight = 'none';
         scrollBox.style.overflow = 'visible';
     }
 
-    // Itago ang mga blangkong rows sa screenshot para sa na-print/may lamang record lang ang kita
+    // Dynamic filtering para sa screenshot: Ikuha lamang ang mga rows na may laman o datos
     const rows = clonedTable2.querySelectorAll('tbody tr');
     rows.forEach(tr => {
         if (tr.querySelector('.net-total-red')) return;

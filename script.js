@@ -1492,22 +1492,55 @@ ESC_ALIGN_CENTER +
     await sendToPrinter(singleReceiptText);
 }
 // ============================================================
-// SCREENSHOT CAPTURE FUNCTION
+// TARGETED SCREENSHOT FUNCTION (Date Bar, 2nd Table, 3rd Table & Notes Only)
 // ============================================================
 function takeScreenshot() {
-    const targetElement = document.querySelector('.main-wrapper') || document.body;
-    
-    html2canvas(targetElement, { 
-        scale: 2, // Para mataas ang kalidad/linaw ng image
-        useCORS: true 
+    // Kukuha lang tayo ng Session Bar (Date & Name), 2nd Table, 3rd Table, at Note Bar
+    const sessionBar = document.querySelector('.session-bar');
+    const table2 = document.querySelector('.table-box-2');
+    const table3 = document.querySelector('.table-box-3');
+    const noteBar = document.getElementById('newTableNoteBar');
+
+    if (!table2 || !table3) {
+        alert("Hindi mahanap ang tables para sa screenshot.");
+        return;
+    }
+
+    // Gagawa ng temporary wrapper element para pagsama-samahin sila
+    const captureContainer = document.createElement('div');
+    captureContainer.style.padding = '10px';
+    captureContainer.style.backgroundColor = '#f3f4f6';
+    captureContainer.style.width = document.querySelector('.main-wrapper').clientWidth + 'px';
+
+    // Idagdag ang mga napiling bahagi (wala na ang switch button)
+    if (sessionBar) captureContainer.appendChild(sessionBar.cloneNode(true));
+    captureContainer.appendChild(table2.cloneNode(true));
+    captureContainer.appendChild(table3.cloneNode(true));
+    if (noteBar) captureContainer.appendChild(noteBar.cloneNode(true));
+
+    // Ilalagay sa labas ng screen sandali para ma-render ng html2canvas
+    captureContainer.style.position = 'absolute';
+    captureContainer.style.left = '-9999px';
+    captureContainer.style.top = '-9999px';
+    document.body.appendChild(captureContainer);
+
+    html2canvas(captureContainer, {
+        scale: 2, // Para mataas ang kalidad at linaw
+        useCORS: true
     }).then(canvas => {
         const link = document.createElement('a');
-        const fileName = `miki-ledger-${currentSessionDate || 'shot'}.png`;
+        const fileName = `miki-summary-${currentSessionDate || 'shot'}.png`;
         link.download = fileName;
         link.href = canvas.toDataURL('image/png');
         link.click();
+
+        // Linisin ang temporary container
+        document.body.removeChild(captureContainer);
     }).catch(err => {
         console.error("Screenshot Error:", err);
+        if (captureContainer.parentNode) {
+            document.body.removeChild(captureContainer);
+        }
         alert("Hindi makagawa ng screenshot. Subukan ulit.");
     });
 }

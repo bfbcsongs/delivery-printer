@@ -56,7 +56,7 @@ if ('serviceWorker' in navigator) {
 }
 
 // ============================================================
-// GLOBAL STATE & DYNAMIC ROWS
+// GLOBAL STATE, DYNAMIC ROWS & UNDO/REDO
 // ============================================================
 
 let activeRow = 1;
@@ -95,11 +95,18 @@ let rowTapTimers = {};
 // PRINT COUNTER TRACKER
 let printCounters = {};
 
+// UNDO / REDO STACKS
+let undoStack = [];
+let redoStack = [];
+let isUndoRedoAction = false;
+const MAX_UNDO_LIMIT = 50;
+
 // ============================================================
 // APP INITIALIZATION (DOM CONTENT LOADED)
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => {
     setupViewSwitcher();
+    setupKeyboardShortcuts();
     loadLedger();
     
     // Close dropdown on click outside
@@ -110,6 +117,84 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+function setupKeyboardShortcuts() {
+    document.addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+            if (e.shiftKey) {
+                e.preventDefault();
+                redo();
+            } else {
+                e.preventDefault();
+                undo();
+            }
+        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+            e.preventDefault();
+            redo();
+        }
+    });
+}
+
+// ============================================================
+// UNDO / REDO SYSTEM
+// ============================================================
+
+function pushUndoState() {
+    if (isUndoRedoAction || isPreviewMode || currentTableViewMode === "PRINT_HISTORY" || !isEditingActive) return;
+
+    const currentSnapshot = JSON.stringify(getCurrentLedgerSnapshot());
+    
+    // Avoid duplicate snapshots
+    if (undoStack.length > 0 && undoStack[undoStack.length - 1] === currentSnapshot) {
+        return;
+    }
+
+    undoStack.push(currentSnapshot);
+    if (undoStack.length > MAX_UNDO_LIMIT) {
+        undoStack.shift();
+    }
+
+    redoStack = []; // Clear redo stack on new modification
+    updateUndoRedoButtonsUI();
+}
+
+function undo() {
+    if (undoStack.length === 0 || isPreviewMode || currentTableViewMode === "PRINT_HISTORY") return;
+
+    isUndoRedoAction = true;
+    const currentState = JSON.stringify(getCurrentLedgerSnapshot());
+    redoStack.push(currentState);
+
+    const previousState = JSON.parse(undoStack.pop());
+    restoreLedgerData(previousState);
+
+    saveLedger();
+    isUndoRedoAction = false;
+    updateUndoRedoButtonsUI();
+}
+
+function redo() {
+    if (redoStack.length === 0 || isPreviewMode || currentTableViewMode === "PRINT_HISTORY") return;
+
+    isUndoRedoAction = true;
+    const currentState = JSON.stringify(getCurrentLedgerSnapshot());
+    undoStack.push(currentState);
+
+    const nextState = JSON.parse(redoStack.pop());
+    restoreLedgerData(nextState);
+
+    saveLedger();
+    isUndoRedoAction = false;
+    updateUndoRedoButtonsUI();
+}
+
+function updateUndoRedoButtonsUI() {
+    const undoBtn = document.getElementById("undoBtn");
+    const redoBtn = document.getElementById("redoBtn");
+
+    if (undoBtn) undoBtn.disabled = undoStack.length === 0 || isPreviewMode;
+    if (redoBtn) redoBtn.disabled = redoStack.length === 0 || isPreviewMode;
+}
 
 // ============================================================
 // CUSTOM NAME DROPDOWN SYSTEM FOR ACTIVE NAME BAR
@@ -136,7 +221,7 @@ function buildNameDropdown(filterText = "") {
         item.className = "custom-dropdown-item";
         item.textContent = name;
         item.onmousedown = (e) => {
-            e.preventDefault(); // Prevents input blur
+            e.preventDefault();
             selectDropdownName(name);
         };
         dropdown.appendChild(item);
@@ -161,6 +246,7 @@ function hideNameDropdown() {
 }
 
 function selectDropdownName(name) {
+    pushUndoState();
     const topInput = document.getElementById("activeCustomerInput");
     if (topInput) {
         topInput.value = name;
@@ -210,7 +296,7 @@ function renderCustomerTableBody() {
                 <td>
                     <input type="text" class="name-input" id="ledgerName_${i}" 
                            value="${escapeHtml(row.name)}"
-                           oninput="updateActiveCustomerName(${i}); saveLedger();" 
+                           oninput="pushUndoState(); updateActiveCustomerName(${i}); saveLedger();" 
                            onfocus="loadRowToMain(${i})" readonly style="background-color:${activeRow === i ? 'white' : '#e5e7eb'};">
                 </td>
                 <td><input type="text" class="readonly-col" id="ledgerDry_${i}" value="${escapeHtml(row.dry)}" readonly onfocus="loadRowToMain(${i})"></td>
@@ -225,7 +311,7 @@ function renderCustomerTableBody() {
         `;
     });
 
-    // Add Row button row
+    // Add Row button
     html += `
         <tr id="addRowTr" style="background-color: #f0fdf4; cursor: pointer;" onclick="addNewCustomerRow()">
             <td colspan="9" style="text-align: center; font-weight: bold; color: #16a34a; padding: 12px; font-size: 14px;">
@@ -262,6 +348,7 @@ function escapeHtml(str) {
 function addNewCustomerRow() {
     if (isPreviewMode || currentTableViewMode === "PRINT_HISTORY" || !isEditingActive) return;
 
+    pushUndoState();
     harvestTableValues();
 
     customerRows.push({
@@ -273,7 +360,6 @@ function addNewCustomerRow() {
     loadRowToMain(customerRows.length);
     saveLedger();
 
-    // Auto focus name bar on new row
     setTimeout(() => {
         const topInput = document.getElementById("activeCustomerInput");
         if (topInput) {
@@ -340,6 +426,7 @@ function toggleTableViewMode() {
         restoreCustomersToTable();
     }
     updateToggleBtnUI();
+    updateUndoRedoButtonsUI();
 }
 
 function updateToggleBtnUI() {
@@ -559,6 +646,8 @@ function setEncodingEditable(editable) {
         input.readOnly = false;
         input.style.backgroundColor = "white";
     });
+
+    updateUndoRedoButtonsUI();
 }
 
 // ============================================================
@@ -580,6 +669,7 @@ function setPreviewMode(preview) {
     } else {
         document.body.classList.remove("preview-mode");
     }
+    updateUndoRedoButtonsUI();
 }
 
 // ============================================================
@@ -714,6 +804,9 @@ function resetLedgerState() {
     printCounters = {};
     customerRows = [{ name: DEFAULT_NAMES[0] || "", dry: "", fresh: "", cab: "", bo: "", bal: "", billing: "0", pay: "", rem: "0", utangMode: false }];
 
+    undoStack = [];
+    redoStack = [];
+
     updateSessionDateDisplay();
     clearAllLedgerInputs();
 
@@ -836,6 +929,7 @@ function handleRowCollTap(row) {
     }, 1000);
 
     if (rowTapCounts[row] >= 5) {
+        pushUndoState();
         rowTapCounts[row] = 0;
         rowUtangMode[row] = !rowUtangMode[row];
 
@@ -886,6 +980,7 @@ function formatMoney(value) {
 function syncFromPanel(type) {
     if (isPreviewMode || currentTableViewMode === "PRINT_HISTORY") return;
     
+    pushUndoState();
     let targetType = type;
     if (type.toUpperCase() === "BO") targetType = "Bo";
 
@@ -902,6 +997,7 @@ function syncFromPanel(type) {
 function syncFromTable(type) {
     if (isPreviewMode || currentTableViewMode === "PRINT_HISTORY") return;
 
+    pushUndoState();
     let targetType = type;
     if (type.toUpperCase() === "BO") targetType = "Bo";
 
@@ -916,6 +1012,7 @@ function syncFromTable(type) {
 }
 
 function clearMainInputs() {
+    pushUndoState();
     document.getElementById("qtyReg").value = "";
     document.getElementById("syncDry").value = "";
 
@@ -1103,7 +1200,7 @@ function calculateExtraTable() {
 }
 
 // ============================================================
-// STORAGE & HISTORY
+// STORAGE & HISTORY (AUTO SAVING FULLY RESTORED)
 // ============================================================
 
 function saveLedger() {
@@ -1132,30 +1229,22 @@ function saveLedger() {
     };
 
     for (let i = 1; i <= 8; i++) {
-        ledgerData.extraTable[`item_${i}`] = document.getElementById(`extraItem_${i}`).value;
-        ledgerData.extraTable[`amount_${i}`] = document.getElementById(`extraAmount_${i}`).value;
+        ledgerData.extraTable[`item_${i}`] = document.getElementById(`extraItem_${i}`)?.value || "";
+        ledgerData.extraTable[`amount_${i}`] = document.getElementById(`extraAmount_${i}`)?.value || "";
     }
 
-    ledgerData.extraTable.coh = document.getElementById("inputCOH").value;
+    ledgerData.extraTable.coh = document.getElementById("inputCOH")?.value || "0";
 
     localStorage.setItem("miki_ledger_data", JSON.stringify(ledgerData));
-}
 
-function forceSaveCurrentDay() {
-    if (!currentSessionDate || !currentSessionName) return;
-
-    saveLedger();
-
-    const activeDraft = JSON.parse(localStorage.getItem("miki_ledger_data"));
-    if (!activeDraft) return;
-
+    // Auto-sync with daily 30-day history archive
     let history = JSON.parse(localStorage.getItem("miki_30day_history") || "[]");
-    const existingIndex = history.findIndex(item => item.date === activeDraft.date);
+    const existingIndex = history.findIndex(item => item.date === ledgerData.date);
 
     if (existingIndex !== -1) {
-        history[existingIndex] = activeDraft;
+        history[existingIndex] = ledgerData;
     } else {
-        history.unshift(activeDraft);
+        history.unshift(ledgerData);
     }
 
     if (history.length > 30) {
@@ -1164,6 +1253,10 @@ function forceSaveCurrentDay() {
 
     localStorage.setItem("miki_30day_history", JSON.stringify(history));
     renderHistoryUI();
+}
+
+function forceSaveCurrentDay() {
+    saveLedger();
 }
 
 function getCurrentLedgerSnapshot() {
@@ -1186,11 +1279,11 @@ function getCurrentLedgerSnapshot() {
     };
 
     for (let i = 1; i <= 8; i++) {
-        snapshot.extraTable[`item_${i}`] = document.getElementById(`extraItem_${i}`).value;
-        snapshot.extraTable[`amount_${i}`] = document.getElementById(`extraAmount_${i}`).value;
+        snapshot.extraTable[`item_${i}`] = document.getElementById(`extraItem_${i}`)?.value || "";
+        snapshot.extraTable[`amount_${i}`] = document.getElementById(`extraAmount_${i}`)?.value || "";
     }
 
-    snapshot.extraTable.coh = document.getElementById("inputCOH").value;
+    snapshot.extraTable.coh = document.getElementById("inputCOH")?.value || "0";
 
     return snapshot;
 }
@@ -1276,7 +1369,6 @@ function loadHistoryFile(dateKey) {
     calculateExtraTable();
 
     saveLedger();
-    forceSaveCurrentDay();
     renderHistoryUI(dateKey);
     resetInactivityTimer();
 }
@@ -1472,7 +1564,6 @@ function editHistoryFile(dateKey) {
     calculateExtraTable();
 
     saveLedger();
-    forceSaveCurrentDay();
     renderHistoryUI(dateKey);
     resetInactivityTimer();
 
@@ -1508,13 +1599,25 @@ function loadLedger() {
 
     const priceInputs = document.querySelectorAll('.price-input');
     priceInputs.forEach(input => {
-        input.addEventListener('input', calculateMain);
+        input.addEventListener('input', () => {
+            pushUndoState();
+            calculateMain();
+        });
     });
 
     setPreviewMode(false);
     setEncodingEditable(false);
     updateSessionDateDisplay();
-    showOpenModal();
+
+    // Restore existing draft session if present
+    const activeDraft = JSON.parse(localStorage.getItem("miki_ledger_data"));
+    if (activeDraft && activeDraft.date) {
+        restoreLedgerData(activeDraft);
+        setEncodingEditable(true);
+        loadRowToMain(1);
+    } else {
+        showOpenModal();
+    }
 }
 
 // ============================================================
@@ -1635,7 +1738,6 @@ async function printRowReceipt(rowNum) {
     localStorage.setItem(storageKey, currentCount.toString());
 
     saveLedger();
-    forceSaveCurrentDay();
 
     const nameInput = document.getElementById(`ledgerName_${rowNum}`);
     const customerName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : `Customer ${rowNum}`;

@@ -1305,12 +1305,19 @@ async function connectBluetoothPrinter() {
     try {
         console.log("Searching for Bluetooth Thermal Printer...");
         
+        // Nilagyan natin ng filters para iyon lang mga may kinalaman sa printer ang lumabas
         bluetoothDevice = await navigator.bluetooth.requestDevice({
-            acceptAllDevices: true,
+            filters: [
+                { namePrefix: 'PT' },
+                { namePrefix: 'MTP' },
+                { namePrefix: 'POS' },
+                { namePrefix: 'Printer' },
+                { namePrefix: 'BlueTooth Printer' }
+            ],
             optionalServices: [
-                '000018f0-0000-1000-8000-00805f9b34fb',
+                '000018f0-0000-1000-8000-00805f9b34fb', // Standard Serial / Printer UUID
                 'e7810a71-73ae-499d-8c15-faa9aef0c3f2',
-                '00001101-0000-1000-8000-00805f9b34fb'
+                '00001101-0000-1000-8000-00805f9b34fb'  // SPP UUID
             ]
         });
 
@@ -1339,6 +1346,7 @@ async function connectBluetoothPrinter() {
         alert("Bluetooth Error: " + error.message);
     }
 }
+
 
 async function sendToPrinter(textData) {
     if (!bluetoothCharacteristic) {

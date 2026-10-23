@@ -51,6 +51,30 @@
     background-color: #eff6ff;
     color: #2563eb;
 }
+
+/* Undo/Redo Buttons */
+.undo-redo-container {
+    display: flex;
+    gap: 4px;
+    margin-right: 6px;
+}
+
+.btn-undo-redo {
+    background-color: #3b82f6;
+    color: white;
+    font-weight: bold;
+    border: none;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.btn-undo-redo:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
 </style>
 </head>
 
@@ -265,7 +289,7 @@
     </div>
 
     <!-- =========================================================
-         ACTIVE FILE BAR (NAME & DATE BAR)
+         ACTIVE FILE BAR (NAME, DATE & UNDO/REDO BAR)
          ========================================================= -->
     <div class="session-bar">
 
@@ -277,7 +301,13 @@
             </div>
         </div>
 
-        <div class="session-actions">
+        <div class="session-actions" style="display: flex; align-items: center;">
+            <!-- UNDO / REDO BUTTONS -->
+            <div class="undo-redo-container">
+                <button id="undoBtn" class="btn-undo-redo" onclick="undo()" title="Undo (Ctrl+Z)" disabled>↺ UNDO</button>
+                <button id="redoBtn" class="btn-undo-redo" onclick="redo()" title="Redo (Ctrl+Y)" disabled>↻ REDO</button>
+            </div>
+
             <button class="btn-sm save-btn" onclick="openSaveConfirmationModal()">Save Day</button>
             <button class="btn-sm" onclick="takeScreenshot()" style="background-color: #8b5cf6; color: white; font-weight: bold;">Camera</button>
             <button class="btn-sm clear-btn" onclick="promptNewFile()">New Day</button>

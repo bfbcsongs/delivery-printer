@@ -8,6 +8,9 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#111827">
 <link rel="stylesheet" href="style.css">
+
+<!-- html2canvas para sa screenshot feature -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 
 <body>
@@ -424,8 +427,69 @@
     </div>
 
 
-        <!-- =========================================================
-         SECOND TABLE / CUSTOMER LIST (50 ROWS & VIEW SWITCHER)
+    <!-- =========================================================
+         1. LONG PRESS VIEW SWITCHER BUTTON (NASA ITAAS)
+         ========================================================= -->
+    <div class="switch-container" style="text-align: center; margin: 10px 0;">
+        <button id="viewToggleBtn" class="btn-toggle-view" style="background-color: #2563eb;">
+            📋 VIEW: CUSTOMERS TABLE (Hold 3s to Switch)
+        </button>
+    </div>
+
+
+    <!-- =========================================================
+         2. ACTIVE FILE BAR (NAME & DATE BAR)
+         ========================================================= -->
+    <div class="session-bar">
+
+        <div class="session-info">
+
+            <div class="date-foreground">
+
+                <span id="displayFileDate">
+                    --
+                </span>
+
+                <span class="weekday-display"
+                      id="displayFileDay">
+                    ---
+                </span>
+
+                <span id="displayFileName">
+                    --
+                </span>
+
+            </div>
+
+        </div>
+
+
+        <div class="session-actions">
+
+            <button class="btn-sm save-btn"
+                    onclick="openSaveConfirmationModal()">
+                Save Day
+            </button>
+
+            <!-- Bagong Camera / Screenshot Button -->
+            <button class="btn-sm"
+                    onclick="takeScreenshot()"
+                    style="background-color: #8b5cf6; color: white; font-weight: bold;">
+                Camera
+            </button>
+
+            <button class="btn-sm clear-btn"
+                    onclick="promptNewFile()">
+                New Day
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- =========================================================
+         3. SECOND TABLE / CUSTOMER LIST (50 ROWS SCROLLABLE)
          ========================================================= -->
 
     <div class="table-box table-box-2 customer-list-watermark">
@@ -433,13 +497,6 @@
         <div class="customer-day-watermark"
              id="customerDayWatermark">
             --
-        </div>
-
-        <!-- Long Press Button Switcher -->
-        <div class="switch-container" style="text-align: center; margin-bottom: 10px;">
-            <button id="viewToggleBtn" class="btn-toggle-view" style="background-color: #2563eb;">
-                📋 VIEW: CUSTOMERS TABLE (Hold 3s to Switch)
-            </button>
         </div>
 
         <!-- Scrollable Table Container -->
@@ -681,50 +738,6 @@
                 </tbody>
 
             </table>
-        </div>
-
-    </div>
-
-    <!-- =========================================================
-         ACTIVE FILE BAR
-         ========================================================= -->
-
-    <div class="session-bar">
-
-        <div class="session-info">
-
-            <div class="date-foreground">
-
-                <span id="displayFileDate">
-                    --
-                </span>
-
-                <span class="weekday-display"
-                      id="displayFileDay">
-                    ---
-                </span>
-
-                <span id="displayFileName">
-                    --
-                </span>
-
-            </div>
-
-        </div>
-
-
-        <div class="session-actions">
-
-            <button class="btn-sm save-btn"
-                    onclick="openSaveConfirmationModal()">
-                Save Day
-            </button>
-
-            <button class="btn-sm clear-btn"
-                    onclick="promptNewFile()">
-                New Day
-            </button>
-
         </div>
 
     </div>

@@ -211,6 +211,7 @@ function recordPrintLog(rowNum, customerName, dry, fresh, cab, bo, bal, billing,
     }
 }
 
+// STRICTLY READ-ONLY PRINT HISTORY VIEW
 function renderPrintHistoryToTable() {
     const d = new Date();
     const year = d.getFullYear();
@@ -452,8 +453,6 @@ function handleModalSubmit() {
             }
         }
 
-        localStorage.removeItem(`miki_print_log_${todayDate}`);
-
         currentSessionDate = todayDate;
         currentSessionName = nameVal;
 
@@ -568,7 +567,7 @@ function clearAllLedgerInputs() {
 // ============================================================
 
 function handleKeyClick() {
-    if (isPreviewMode) return;
+    if (isPreviewMode || currentTableViewMode === "PRINT_HISTORY") return;
 
     tapCount++;
     clearTimeout(tapTimer);
@@ -596,7 +595,7 @@ function toggleLockState(locked) {
 }
 
 function handlePriceKeyClick() {
-    if (isPreviewMode) return;
+    if (isPreviewMode || currentTableViewMode === "PRINT_HISTORY") return;
 
     priceTapCount++;
     clearTimeout(priceTapTimer);
@@ -624,7 +623,7 @@ function togglePriceLockState(locked) {
 }
 
 function handleRowCollTap(row) {
-    if (isPreviewMode) return;
+    if (isPreviewMode || currentTableViewMode === "PRINT_HISTORY") return;
 
     if (!rowTapCounts[row]) rowTapCounts[row] = 0;
     rowTapCounts[row]++;
@@ -683,7 +682,7 @@ function formatMoney(value) {
 // ============================================================
 
 function syncFromPanel(type) {
-    if (isPreviewMode) return;
+    if (isPreviewMode || currentTableViewMode === "PRINT_HISTORY") return;
     
     let targetType = type;
     if (type.toUpperCase() === "BO") targetType = "Bo";
@@ -699,7 +698,7 @@ function syncFromPanel(type) {
 }
 
 function syncFromTable(type) {
-    if (isPreviewMode) return;
+    if (isPreviewMode || currentTableViewMode === "PRINT_HISTORY") return;
 
     let targetType = type;
     if (type.toUpperCase() === "BO") targetType = "Bo";
@@ -734,6 +733,8 @@ function clearMainInputs() {
 }
 
 function calculateMain() {
+    if (currentTableViewMode === "PRINT_HISTORY") return;
+
     const regQty = getVal("qtyReg");
     const regPrice = getVal("priceReg");
     const regAmount = Math.round(regQty * regPrice);
@@ -904,7 +905,7 @@ function calculateExtraTable() {
 // ============================================================
 
 function saveLedger() {
-    if (!currentSessionDate || !currentSessionName || !isEditingActive || isPreviewMode) {
+    if (!currentSessionDate || !currentSessionName || !isEditingActive || isPreviewMode || currentTableViewMode === "PRINT_HISTORY") {
         return;
     }
 
@@ -1167,21 +1168,7 @@ function exitHistoryPreview() {
     renderHistoryUI();
 }
 
-function deleteHistoryFile(dateKey) {
-    if (confirm(`Delete file for ${dateKey}?`)) {
-        let history = JSON.parse(localStorage.getItem("miki_30day_history") || "[]");
-        history = history.filter(item => item.date !== dateKey);
-
-        localStorage.setItem("miki_30day_history", JSON.stringify(history));
-
-        if (isPreviewMode && previewDateKey === dateKey) {
-            exitHistoryPreview();
-        } else {
-            renderHistoryUI();
-        }
-    }
-}
-
+// READ-ONLY FILE HISTORY SIDEBAR (NO EDIT/DELETE BUTTONS)
 function renderHistoryUI(selectedDateKey = null) {
     const historyContainer = document.getElementById("historyContainer");
     const historyCount = document.getElementById("historyCount");
@@ -1208,8 +1195,8 @@ function renderHistoryUI(selectedDateKey = null) {
 
         div.className = `history-item ${isSelected ? 'selected-file' : ''} ${isPreviewFile ? 'preview-file' : ''}`;
 
-        div.addEventListener("click", function(event) {
-            if (event.target.closest("button")) return;
+        // PERMANENT READ-ONLY: CLICK TO VIEW ONLY
+        div.addEventListener("click", function() {
             previewHistoryFile(item.date);
         });
 
@@ -1226,30 +1213,7 @@ function renderHistoryUI(selectedDateKey = null) {
         infoDiv.appendChild(strong);
         infoDiv.appendChild(document.createTextNode(" - " + item.name));
 
-        const buttonDiv = document.createElement("div");
-
-        const editButton = document.createElement("button");
-        editButton.className = "btn-sm btn-edit";
-        editButton.textContent = "Edit";
-        editButton.addEventListener("click", function(event) {
-            event.stopPropagation();
-            loadHistoryFile(item.date);
-        });
-
-        const deleteButton = document.createElement("button");
-        deleteButton.className = "btn-sm btn-del";
-        deleteButton.textContent = "Del";
-        deleteButton.addEventListener("click", function(event) {
-            event.stopPropagation();
-            deleteHistoryFile(item.date);
-        });
-
-        buttonDiv.appendChild(editButton);
-        buttonDiv.appendChild(deleteButton);
-
         div.appendChild(infoDiv);
-        div.appendChild(buttonDiv);
-
         historyContainer.appendChild(div);
     });
 }
@@ -1354,7 +1318,7 @@ async function sendToPrinter(textData) {
 }
 
 // ============================================================
-// PRINT ACTIVE ROW RECEIPT (NA MAY DOUBLE-TRIGGER PROTECTION)
+// PRINT ACTIVE ROW RECEIPT
 // ============================================================
 let isPrintingActive = false;
 
@@ -1423,7 +1387,6 @@ async function printRowReceipt(rowNum) {
 
     const grandTotal = billing + bal;
 
-    // ISANG BESES NA LANG ITO TATAWAGIN PARA HINDI NADODOBLE SA LOGS
     recordPrintLog(rowNum, customerName, dry, fresh, cab, bo, bal, billing, payment, utang, currentCount);
 
     const dateVal = document.getElementById("displayFileDate") ? document.getElementById("displayFileDate").innerText : "TODAY";
@@ -1557,6 +1520,7 @@ function takeScreenshot() {
 // ============================================================
 
 function handleActiveCustomerNameChange(val) {
+    if (currentTableViewMode === "PRINT_HISTORY") return;
     const currentNameEl = document.getElementById(`ledgerName_${activeRow}`);
     if (currentNameEl) {
         currentNameEl.value = val;
@@ -1576,7 +1540,7 @@ function updateActiveCustomerName(row) {
 }
 
 function loadRowToMain(row) {
-    if (!isEditingActive || isPreviewMode) return;
+    if (!isEditingActive || isPreviewMode || currentTableViewMode === "PRINT_HISTORY") return;
 
     activeRow = row;
     

@@ -1980,36 +1980,49 @@ function loadRowToMain(row) {
     saveLedger();
 }
 // ============================================================
-// BACK BUTTON / BACK GESTURE HANDLER (PREVENT APP EXIT)
+// STRICT BACK BUTTON LOCK (PREVENT EXIT DURING SCREEN PINNING / BACK TAPS)
 // ============================================================
 
-// Push an initial history state so the back button has something to pop
-history.pushState({ page: 'ledger_main' }, '', location.href);
-
-window.addEventListener('popstate', (event) => {
-    // Re-push state so the app stays open on repeated back taps
-    history.pushState({ page: 'ledger_main' }, '', location.href);
-
-    // If viewing Print History Log, back button returns to Customer Table
-    if (currentTableViewMode === "PRINT_HISTORY") {
-        currentTableViewMode = "CUSTOMERS";
-        restoreCustomersToTable();
-        updateToggleBtnUI();
-        return;
+(function lockBackNavigation() {
+    // Overwrite history entries to trap the back action inside the app
+    function pushStateLoop() {
+        window.history.pushState({ page: 'ledger_main' }, '', window.location.href);
     }
 
-    // If viewing a Saved File in Preview Mode, back button exits Preview
-    if (isPreviewMode) {
-        exitHistoryPreview();
-        return;
-    }
+    pushStateLoop();
 
-    // If a modal or dropdown is open, close it
-    const modal = document.getElementById("setupModal");
-    if (modal && modal.style.display === "flex") {
-        closeSetupModal();
-        return;
-    }
+    window.addEventListener('popstate', function (event) {
+        // Immediately trap the back gesture again so it doesn't leave the app
+        pushStateLoop();
 
-    hideNameDropdown();
-});
+        // 1. If inside Print History, switch back to Customers table
+        if (typeof currentTableViewMode !== 'undefined' && currentTableViewMode === "PRINT_HISTORY") {
+            currentTableViewMode = "CUSTOMERS";
+            if (typeof restoreCustomersToTable === 'function') restoreCustomersToTable();
+            if (typeof updateToggleBtnUI === 'function') updateToggleBtnUI();
+            return;
+        }
+
+        // 2. If in Preview Mode, exit preview
+        if (typeof isPreviewMode !== 'undefined' && isPreviewMode) {
+            if (typeof exitHistoryPreview === 'function') exitHistoryPreview();
+            return;
+        }
+
+        // 3. If modal is open, close it
+        const modal = document.getElementById("setupModal");
+        if (modal && modal.style.display === "flex") {
+            if (typeof closeSetupModal === 'function') closeSetupModal();
+            return;
+        }
+
+        // 4. Hide customer dropdown if active
+        if (typeof hideNameDropdown === 'function') {
+            hideNameDropdown();
+        }
+    });
+
+    // Continuously reinforce history state on user touches
+    document.addEventListener('touchstart', pushStateLoop, { passive: true });
+    document.addEventListener('click', pushStateLoop, { passive: true });
+})();

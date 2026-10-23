@@ -144,7 +144,6 @@ function pushUndoState() {
 
     const currentSnapshot = JSON.stringify(getCurrentLedgerSnapshot());
     
-    // Avoid duplicate snapshots
     if (undoStack.length > 0 && undoStack[undoStack.length - 1] === currentSnapshot) {
         return;
     }
@@ -154,7 +153,7 @@ function pushUndoState() {
         undoStack.shift();
     }
 
-    redoStack = []; // Clear redo stack on new modification
+    redoStack = []; 
     updateUndoRedoButtonsUI();
 }
 
@@ -761,6 +760,7 @@ function handleModalSubmit() {
         updateSessionDateDisplay();
         document.getElementById("setupModal").style.display = "none";
 
+        // Enable editing BEFORE saving so history captures it immediately
         setPreviewMode(false);
         setEncodingEditable(true);
         resetInactivityTimer();
@@ -1237,7 +1237,7 @@ function saveLedger() {
 
     localStorage.setItem("miki_ledger_data", JSON.stringify(ledgerData));
 
-    // Auto-sync with daily 30-day history archive
+    // Auto-sync with daily 30-day history archive immediately
     let history = JSON.parse(localStorage.getItem("miki_30day_history") || "[]");
     const existingIndex = history.findIndex(item => item.date === ledgerData.date);
 
@@ -1443,7 +1443,7 @@ function exitHistoryPreview() {
 }
 
 // ============================================================
-// HISTORY UI
+// HISTORY UI WITH PREVIEW, EDIT & DELETE BUTTONS
 // ============================================================
 
 function renderHistoryUI(selectedDateKey = null) {
@@ -1595,6 +1595,9 @@ function deleteHistoryFile(dateKey) {
 
 function loadLedger() {
     restoreGlobalPrices();
+    
+    // Render customer table rows immediately on load so the add row button is present
+    renderCustomerTableBody();
     renderHistoryUI();
 
     const priceInputs = document.querySelectorAll('.price-input');

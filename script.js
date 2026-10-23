@@ -95,6 +95,14 @@ let rowTapTimers = {};
 let printCounters = {};
 
 // ============================================================
+// APP INITIALIZATION (DOM CONTENT LOADED)
+// ============================================================
+window.addEventListener('DOMContentLoaded', () => {
+    setupViewSwitcher();
+    loadLedger();
+});
+
+// ============================================================
 // VIEW SWITCHER & PRINT AUDIT LOG SYSTEM (50 ROWS)
 // ============================================================
 let currentTableViewMode = "CUSTOMERS"; // "CUSTOMERS" or "PRINT_HISTORY"
@@ -362,7 +370,7 @@ function setPreviewMode(preview) {
 }
 
 // ============================================================
-// MODALS (AUTOMATIC DEVICE DATE)
+// MODALS
 // ============================================================
 
 function showOpenModal() {
@@ -1249,7 +1257,6 @@ function renderHistoryUI(selectedDateKey = null) {
 function loadLedger() {
     restoreGlobalPrices();
     renderHistoryUI();
-    setupViewSwitcher();
 
     const priceInputs = document.querySelectorAll('.price-input');
     priceInputs.forEach(input => {
@@ -1459,7 +1466,7 @@ ESC_ALIGN_CENTER +
 }
 
 // ============================================================
-// TARGETED SCREENSHOT FUNCTION (Date Bar, 2nd Table, 3rd Table & Notes Only)
+// TARGETED SCREENSHOT FUNCTION
 // ============================================================
 function takeScreenshot() {
     const sessionBar = document.querySelector('.session-bar');

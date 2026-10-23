@@ -1,12 +1,10 @@
 // ============================================================
-// DEFAULT CUSTOMER NAMES (Rows 1 to 50)
+// DEFAULT CUSTOMER NAMES
 // ============================================================
 const DEFAULT_NAMES = [
     "Rassel", "Cess", "Ed", "Risa", "Rakel", "Lina", 
     "7/11", "Leah", "Jeny", 
-    "Sweet", "Lany", "Jean", "Ling²", "", "", "Flor",
-    "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
-    "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""
+    "Sweet", "Lany", "Jean", "Ling²", "Flor"
 ];
 
 // ============================================================
@@ -58,10 +56,13 @@ if ('serviceWorker' in navigator) {
 }
 
 // ============================================================
-// GLOBAL STATE
+// GLOBAL STATE & DYNAMIC ROWS
 // ============================================================
 
 let activeRow = 1;
+let customerRows = [
+    { name: DEFAULT_NAMES[0] || "", dry: "", fresh: "", cab: "", bo: "", bal: "", billing: "0", pay: "", rem: "0", utangMode: false }
+];
 
 let tapCount = 0;
 let tapTimer = null;
@@ -86,7 +87,7 @@ let isPreviewMode = false;
 let previewDateKey = null;
 let previewBackup = null;
 
-// ROW UTANG MODE TRACKER (5-tap sa Coll'n)
+// ROW UTANG MODE TRACKER
 let rowUtangMode = {};
 let rowTapCounts = {};
 let rowTapTimers = {};
@@ -98,12 +99,132 @@ let printCounters = {};
 // APP INITIALIZATION (DOM CONTENT LOADED)
 // ============================================================
 window.addEventListener('DOMContentLoaded', () => {
+    populateDatalist();
     setupViewSwitcher();
     loadLedger();
 });
 
+function populateDatalist() {
+    const datalist = document.getElementById('defaultNamesList');
+    if (datalist && datalist.children.length === 0) {
+        DEFAULT_NAMES.forEach(name => {
+            if (name && name.trim() !== "") {
+                const opt = document.createElement('option');
+                opt.value = name;
+                datalist.appendChild(opt);
+            }
+        });
+    }
+}
+
 // ============================================================
-// VIEW SWITCHER & PRINT AUDIT LOG SYSTEM (50 ROWS)
+// DYNAMIC CUSTOMER TABLE RENDERING
+// ============================================================
+
+function harvestTableValues() {
+    customerRows.forEach((row, index) => {
+        const i = index + 1;
+        const nameEl = document.getElementById(`ledgerName_${i}`);
+        const dryEl = document.getElementById(`ledgerDry_${i}`);
+        const freshEl = document.getElementById(`ledgerFresh_${i}`);
+        const cabEl = document.getElementById(`ledgerCab_${i}`);
+        const boEl = document.getElementById(`ledgerBo_${i}`);
+        const balEl = document.getElementById(`ledgerBal_${i}`);
+        const billingEl = document.getElementById(`ledgerBilling_${i}`);
+        const payEl = document.getElementById(`ledgerPay_${i}`);
+        const remEl = document.getElementById(`ledgerRem_${i}`);
+
+        if (nameEl) row.name = nameEl.value;
+        if (dryEl) row.dry = dryEl.value;
+        if (freshEl) row.fresh = freshEl.value;
+        if (cabEl) row.cab = cabEl.value;
+        if (boEl) row.bo = boEl.value;
+        if (balEl) row.bal = balEl.value;
+        if (billingEl) row.billing = billingEl.value;
+        if (payEl) row.pay = payEl.value;
+        if (remEl) row.rem = remEl.value;
+    });
+}
+
+function renderCustomerTableBody() {
+    const tbody = document.getElementById("customerTableBody");
+    if (!tbody) return;
+
+    let html = "";
+    customerRows.forEach((row, index) => {
+        const i = index + 1;
+        html += `
+            <tr id="rowTr_${i}">
+                <td>
+                    <input type="text" class="name-input" id="ledgerName_${i}" 
+                           value="${escapeHtml(row.name)}"
+                           list="defaultNamesList"
+                           oninput="updateActiveCustomerName(${i}); saveLedger();" 
+                           onfocus="loadRowToMain(${i})" readonly style="background-color:${activeRow === i ? 'white' : '#e5e7eb'};">
+                </td>
+                <td><input type="text" class="readonly-col" id="ledgerDry_${i}" value="${escapeHtml(row.dry)}" readonly onfocus="loadRowToMain(${i})"></td>
+                <td><input type="text" class="readonly-col" id="ledgerFresh_${i}" value="${escapeHtml(row.fresh)}" readonly onfocus="loadRowToMain(${i})"></td>
+                <td><input type="text" class="readonly-col" id="ledgerCab_${i}" value="${escapeHtml(row.cab)}" readonly onfocus="loadRowToMain(${i})"></td>
+                <td><input type="text" class="readonly-col" id="ledgerBo_${i}" value="${escapeHtml(row.bo)}" readonly onfocus="loadRowToMain(${i})"></td>
+                <td><input type="text" class="readonly-col" id="ledgerBal_${i}" value="${escapeHtml(row.bal)}" readonly onfocus="loadRowToMain(${i})"></td>
+                <td><input type="text" class="readonly-col amount" id="ledgerBilling_${i}" value="${escapeHtml(row.billing)}" readonly></td>
+                <td><input type="text" class="readonly-col colln-input" id="ledgerPay_${i}" value="${escapeHtml(row.pay)}" readonly onclick="handleRowCollTap(${i})" onfocus="loadRowToMain(${i})"></td>
+                <td><input type="text" class="readonly-col amount" id="ledgerRem_${i}" value="${escapeHtml(row.rem)}" readonly></td>
+            </tr>
+        `;
+    });
+
+    // Add Row button row
+    html += `
+        <tr id="addRowTr" style="background-color: #f0fdf4; cursor: pointer;" onclick="addNewCustomerRow()">
+            <td colspan="9" style="text-align: center; font-weight: bold; color: #16a34a; padding: 12px; font-size: 14px;">
+                ➕ TAP HERE TO ADD NEW ROW
+            </td>
+        </tr>
+    `;
+
+    // Net Total row
+    html += `
+        <tr>
+            <td class="miki" style="color:#dc2626; font-size:9px; padding:0 1px;">NET TOTAL</td>
+            <td class="net-total-red" id="totalDry">0</td>
+            <td class="net-total-red" id="totalFresh">0</td>
+            <td class="net-total-red" id="totalCab">0</td>
+            <td class="net-total-red" id="totalBo">0</td>
+            <td class="net-total-red" id="totalBal">0</td>
+            <td class="net-total-red" id="totalBilling">0</td>
+            <td class="net-total-red" id="totalColln">0</td>
+            <td class="net-total-red" id="totalRem">0</td>
+        </tr>
+    `;
+
+    tbody.innerHTML = html;
+    toggleLockState(isLocked);
+    calculateLedgerTotals();
+}
+
+function escapeHtml(str) {
+    if (!str) return "";
+    return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function addNewCustomerRow() {
+    if (isPreviewMode || currentTableViewMode === "PRINT_HISTORY" || !isEditingActive) return;
+
+    harvestTableValues();
+
+    customerRows.push({
+        name: "",
+        dry: "", fresh: "", cab: "", bo: "", bal: "", billing: "0", pay: "", rem: "0", utangMode: false
+    });
+
+    renderCustomerTableBody();
+    loadRowToMain(customerRows.length);
+    saveLedger();
+}
+
+// ============================================================
+// VIEW SWITCHER & PRINT AUDIT LOG SYSTEM
 // ============================================================
 let currentTableViewMode = "CUSTOMERS"; // "CUSTOMERS" or "PRINT_HISTORY"
 let longPressTimer = null;
@@ -225,43 +346,69 @@ function renderPrintHistoryToTable() {
 
     setEncodingEditable(false);
 
-    for (let i = 1; i <= 50; i++) {
-        const log = logs[i - 1];
+    // Temporarily replace customerRows with logs for print history view
+    let tempRows = logs.map(log => ({
+        name: log.customerName || "",
+        dry: log.dry || "",
+        fresh: log.fresh || "",
+        cab: log.cab || "",
+        bo: log.bo || "",
+        bal: log.bal || "",
+        billing: formatMoney(log.billing),
+        pay: formatMoney(log.payment),
+        rem: formatMoney(log.utang),
+        utangMode: false
+    }));
 
-        const nameEl = document.getElementById(`ledgerName_${i}`);
-        if (!nameEl) continue;
-
-        if (log) {
-            nameEl.value = log.customerName || "";
-            document.getElementById(`ledgerDry_${i}`).value = log.dry || "";
-            document.getElementById(`ledgerFresh_${i}`).value = log.fresh || "";
-            document.getElementById(`ledgerCab_${i}`).value = log.cab || "";
-            document.getElementById(`ledgerBo_${i}`).value = log.bo || "";
-            document.getElementById(`ledgerBal_${i}`).value = log.bal || "";
-            document.getElementById(`ledgerBilling_${i}`).value = formatMoney(log.billing);
-            document.getElementById(`ledgerPay_${i}`).value = formatMoney(log.payment);
-            document.getElementById(`ledgerRem_${i}`).value = formatMoney(log.utang);
-        } else {
-            nameEl.value = "";
-            document.getElementById(`ledgerDry_${i}`).value = "";
-            document.getElementById(`ledgerFresh_${i}`).value = "";
-            document.getElementById(`ledgerCab_${i}`).value = "";
-            document.getElementById(`ledgerBo_${i}`).value = "";
-            document.getElementById(`ledgerBal_${i}`).value = "";
-            document.getElementById(`ledgerBilling_${i}`).value = "";
-            document.getElementById(`ledgerPay_${i}`).value = "";
-            document.getElementById(`ledgerRem_${i}`).value = "";
-        }
+    if (tempRows.length === 0) {
+        tempRows = [{ name: "No print logs yet", dry: "", fresh: "", cab: "", bo: "", bal: "", billing: "0", pay: "", rem: "0", utangMode: false }];
     }
+
+    const tbody = document.getElementById("customerTableBody");
+    if (!tbody) return;
+
+    let html = "";
+    tempRows.forEach((row, index) => {
+        const i = index + 1;
+        html += `
+            <tr>
+                <td><input type="text" class="name-input" value="${escapeHtml(row.name)}" readonly style="background-color:#e5e7eb;"></td>
+                <td><input type="text" class="readonly-col" value="${escapeHtml(row.dry)}" readonly></td>
+                <td><input type="text" class="readonly-col" value="${escapeHtml(row.fresh)}" readonly></td>
+                <td><input type="text" class="readonly-col" value="${escapeHtml(row.cab)}" readonly></td>
+                <td><input type="text" class="readonly-col" value="${escapeHtml(row.bo)}" readonly></td>
+                <td><input type="text" class="readonly-col" value="${escapeHtml(row.bal)}" readonly></td>
+                <td><input type="text" class="readonly-col amount" value="${escapeHtml(row.billing)}" readonly></td>
+                <td><input type="text" class="readonly-col colln-input" value="${escapeHtml(row.pay)}" readonly></td>
+                <td><input type="text" class="readonly-col amount" value="${escapeHtml(row.rem)}" readonly></td>
+            </tr>
+        `;
+    });
+
+    html += `
+        <tr>
+            <td class="miki" style="color:#dc2626; font-size:9px; padding:0 1px;">NET TOTAL</td>
+            <td class="net-total-red" id="totalDry">0</td>
+            <td class="net-total-red" id="totalFresh">0</td>
+            <td class="net-total-red" id="totalCab">0</td>
+            <td class="net-total-red" id="totalBo">0</td>
+            <td class="net-total-red" id="totalBal">0</td>
+            <td class="net-total-red" id="totalBilling">0</td>
+            <td class="net-total-red" id="totalColln">0</td>
+            <td class="net-total-red" id="totalRem">0</td>
+        </tr>
+    `;
+
+    tbody.innerHTML = html;
     calculateLedgerTotals();
 }
 
 function restoreCustomersToTable() {
     const activeDraft = JSON.parse(localStorage.getItem("miki_ledger_data"));
-    if (activeDraft) {
+    if (activeDraft && activeDraft.customerRows) {
         restoreLedgerData(activeDraft);
     } else {
-        applyDefaultNamesIfEmpty();
+        renderCustomerTableBody();
     }
     setEncodingEditable(true);
 }
@@ -507,6 +654,7 @@ function resetLedgerState() {
     currentSessionName = "";
     rowUtangMode = {};
     printCounters = {};
+    customerRows = [{ name: DEFAULT_NAMES[0] || "", dry: "", fresh: "", cab: "", bo: "", bal: "", billing: "0", pay: "", rem: "0", utangMode: false }];
 
     updateSessionDateDisplay();
     clearAllLedgerInputs();
@@ -518,39 +666,28 @@ function resetLedgerState() {
 }
 
 // ============================================================
-// DEFAULT NAMES & CLEAR (50 ROWS)
+// DEFAULT NAMES & CLEAR
 // ============================================================
 
 function applyDefaultNamesIfEmpty() {
-    for (let i = 1; i <= 50; i++) {
-        const el = document.getElementById(`ledgerName_${i}`);
-        if (el && (!el.value || el.value.trim() === "")) {
-            el.value = DEFAULT_NAMES[i - 1] || "";
-        }
+    if (customerRows.length > 0 && (!customerRows[0].name || customerRows[0].name.trim() === "")) {
+        customerRows[0].name = DEFAULT_NAMES[0] || "";
     }
+    renderCustomerTableBody();
     updateActiveCustomerName(activeRow);
 }
 
 function clearAllLedgerInputs() {
     clearMainInputs();
 
-    for (let i = 1; i <= 50; i++) {
-        const defaultName = DEFAULT_NAMES[i - 1] || "";
-        const nameEl = document.getElementById(`ledgerName_${i}`);
-        if (nameEl) nameEl.value = defaultName;
-        
-        if (document.getElementById(`ledgerDry_${i}`)) document.getElementById(`ledgerDry_${i}`).value = "";
-        if (document.getElementById(`ledgerFresh_${i}`)) document.getElementById(`ledgerFresh_${i}`).value = "";
-        if (document.getElementById(`ledgerCab_${i}`)) document.getElementById(`ledgerCab_${i}`).value = "";
-        if (document.getElementById(`ledgerBo_${i}`)) document.getElementById(`ledgerBo_${i}`).value = "";
-        if (document.getElementById(`ledgerBal_${i}`)) document.getElementById(`ledgerBal_${i}`).value = "";
-        if (document.getElementById(`ledgerBilling_${i}`)) document.getElementById(`ledgerBilling_${i}`).value = "";
-        if (document.getElementById(`ledgerPay_${i}`)) document.getElementById(`ledgerPay_${i}`).value = "";
-        if (document.getElementById(`ledgerRem_${i}`)) document.getElementById(`ledgerRem_${i}`).value = "";
-    }
+    customerRows = [
+        { name: DEFAULT_NAMES[0] || "", dry: "", fresh: "", cab: "", bo: "", bal: "", billing: "0", pay: "", rem: "0", utangMode: false }
+    ];
 
     rowUtangMode = {};
     printCounters = {};
+
+    renderCustomerTableBody();
 
     for (let i = 1; i <= 8; i++) {
         if (document.getElementById(`extraItem_${i}`)) document.getElementById(`extraItem_${i}`).value = "";
@@ -838,7 +975,7 @@ function calculateLedgerTotals() {
     let sumDry = 0, sumFresh = 0, sumCab = 0, sumBo = 0;
     let sumBal = 0, sumBilling = 0, sumColln = 0, sumRem = 0;
 
-    for (let i = 1; i <= 50; i++) {
+    for (let i = 1; i <= customerRows.length; i++) {
         const dryEl = document.getElementById(`ledgerDry_${i}`);
         if (!dryEl) continue;
 
@@ -908,7 +1045,7 @@ function calculateExtraTable() {
 }
 
 // ============================================================
-// STORAGE & HISTORY (50 ROWS)
+// STORAGE & HISTORY
 // ============================================================
 
 function saveLedger() {
@@ -916,12 +1053,13 @@ function saveLedger() {
         return;
     }
 
+    harvestTableValues();
     const noteElement = document.getElementById("newTableNote");
 
     const ledgerData = {
         date: currentSessionDate,
         name: currentSessionName,
-        rows: {},
+        customerRows: customerRows,
         utangModes: rowUtangMode,
         printCounters: printCounters,
         extraTable: {
@@ -934,21 +1072,6 @@ function saveLedger() {
             bo: document.getElementById("priceBo")?.value || ""
         }
     };
-
-    for (let i = 1; i <= 50; i++) {
-        const nameEl = document.getElementById(`ledgerName_${i}`);
-        if (!nameEl) continue;
-
-        ledgerData.rows[`name_${i}`] = nameEl.value;
-        ledgerData.rows[`dry_${i}`] = document.getElementById(`ledgerDry_${i}`).value;
-        ledgerData.rows[`fresh_${i}`] = document.getElementById(`ledgerFresh_${i}`).value;
-        ledgerData.rows[`cab_${i}`] = document.getElementById(`ledgerCab_${i}`).value;
-        ledgerData.rows[`bo_${i}`] = document.getElementById(`ledgerBo_${i}`).value;
-        ledgerData.rows[`bal_${i}`] = document.getElementById(`ledgerBal_${i}`).value;
-        ledgerData.rows[`billing_${i}`] = document.getElementById(`ledgerBilling_${i}`).value;
-        ledgerData.rows[`pay_${i}`] = document.getElementById(`ledgerPay_${i}`).value;
-        ledgerData.rows[`rem_${i}`] = document.getElementById(`ledgerRem_${i}`).value;
-    }
 
     for (let i = 1; i <= 8; i++) {
         ledgerData.extraTable[`item_${i}`] = document.getElementById(`extraItem_${i}`).value;
@@ -986,10 +1109,11 @@ function forceSaveCurrentDay() {
 }
 
 function getCurrentLedgerSnapshot() {
+    harvestTableValues();
     const snapshot = {
         date: currentSessionDate,
         name: currentSessionName,
-        rows: {},
+        customerRows: JSON.parse(JSON.stringify(customerRows)),
         utangModes: { ...rowUtangMode },
         printCounters: { ...printCounters },
         extraTable: {
@@ -1002,21 +1126,6 @@ function getCurrentLedgerSnapshot() {
             bo: document.getElementById("priceBo")?.value || ""
         }
     };
-
-    for (let i = 1; i <= 50; i++) {
-        const nameEl = document.getElementById(`ledgerName_${i}`);
-        if (!nameEl) continue;
-
-        snapshot.rows[`name_${i}`] = nameEl.value;
-        snapshot.rows[`dry_${i}`] = document.getElementById(`ledgerDry_${i}`).value;
-        snapshot.rows[`fresh_${i}`] = document.getElementById(`ledgerFresh_${i}`).value;
-        snapshot.rows[`cab_${i}`] = document.getElementById(`ledgerCab_${i}`).value;
-        snapshot.rows[`bo_${i}`] = document.getElementById(`ledgerBo_${i}`).value;
-        snapshot.rows[`bal_${i}`] = document.getElementById(`ledgerBal_${i}`).value;
-        snapshot.rows[`billing_${i}`] = document.getElementById(`ledgerBilling_${i}`).value;
-        snapshot.rows[`pay_${i}`] = document.getElementById(`ledgerPay_${i}`).value;
-        snapshot.rows[`rem_${i}`] = document.getElementById(`ledgerRem_${i}`).value;
-    }
 
     for (let i = 1; i <= 8; i++) {
         snapshot.extraTable[`item_${i}`] = document.getElementById(`extraItem_${i}`).value;
@@ -1038,9 +1147,33 @@ function restoreLedgerData(data) {
     rowUtangMode = data.utangModes ? { ...data.utangModes } : {};
     printCounters = data.printCounters ? { ...data.printCounters } : {};
 
-    updateSessionDateDisplay();
+    if (data.customerRows && Array.isArray(data.customerRows)) {
+        customerRows = JSON.parse(JSON.stringify(data.customerRows));
+    } else if (data.rows) {
+        customerRows = [];
+        for (let i = 1; i <= 50; i++) {
+            if (data.rows[`name_${i}`]) {
+                customerRows.push({
+                    name: data.rows[`name_${i}`] || "",
+                    dry: data.rows[`dry_${i}`] || "",
+                    fresh: data.rows[`fresh_${i}`] || "",
+                    cab: data.rows[`cab_${i}`] || "",
+                    bo: data.rows[`bo_${i}`] || "",
+                    bal: data.rows[`bal_${i}`] || "",
+                    billing: data.rows[`billing_${i}`] || "0",
+                    pay: data.rows[`pay_${i}`] || "",
+                    rem: data.rows[`rem_${i}`] || "0"
+                });
+            }
+        }
+        if (customerRows.length === 0) {
+            customerRows = [{ name: DEFAULT_NAMES[0] || "", dry: "", fresh: "", cab: "", bo: "", bal: "", billing: 0, pay: "", rem: 0, utangMode: false }];
+        }
+    }
 
+    updateSessionDateDisplay();
     restoreGlobalPrices();
+
     if (data.prices) {
         if (data.prices.reg && document.getElementById("priceReg")) document.getElementById("priceReg").value = data.prices.reg;
         if (data.prices.fresh && document.getElementById("priceFresh")) document.getElementById("priceFresh").value = data.prices.fresh;
@@ -1048,22 +1181,7 @@ function restoreLedgerData(data) {
         if (data.prices.bo && document.getElementById("priceBo")) document.getElementById("priceBo").value = data.prices.bo;
     }
 
-    for (let i = 1; i <= 50; i++) {
-        const nameEl = document.getElementById(`ledgerName_${i}`);
-        if (!nameEl) continue;
-
-        if (data.rows && data.rows[`name_${i}`] !== undefined) {
-            nameEl.value = data.rows[`name_${i}`];
-        }
-        if (data.rows && data.rows[`dry_${i}`] !== undefined) document.getElementById(`ledgerDry_${i}`).value = data.rows[`dry_${i}`];
-        if (data.rows && data.rows[`fresh_${i}`] !== undefined) document.getElementById(`ledgerFresh_${i}`).value = data.rows[`fresh_${i}`];
-        if (data.rows && data.rows[`cab_${i}`] !== undefined) document.getElementById(`ledgerCab_${i}`).value = data.rows[`cab_${i}`];
-        if (data.rows && data.rows[`bo_${i}`] !== undefined) document.getElementById(`ledgerBo_${i}`).value = data.rows[`bo_${i}`];
-        if (data.rows && data.rows[`bal_${i}`] !== undefined) document.getElementById(`ledgerBal_${i}`).value = data.rows[`bal_${i}`];
-        if (data.rows && data.rows[`billing_${i}`] !== undefined) document.getElementById(`ledgerBilling_${i}`).value = data.rows[`billing_${i}`];
-        if (data.rows && data.rows[`pay_${i}`] !== undefined) document.getElementById(`ledgerPay_${i}`).value = data.rows[`pay_${i}`];
-        if (data.rows && data.rows[`rem_${i}`] !== undefined) document.getElementById(`ledgerRem_${i}`).value = data.rows[`rem_${i}`];
-    }
+    renderCustomerTableBody();
 
     if (data.extraTable) {
         for (let i = 1; i <= 8; i++) {
@@ -1075,8 +1193,6 @@ function restoreLedgerData(data) {
         const noteElement = document.getElementById("newTableNote");
         if (noteElement) noteElement.value = data.extraTable.note || "";
     }
-
-    applyDefaultNamesIfEmpty();
 
     calculateLedgerTotals();
     calculateExtraTable();
@@ -1168,6 +1284,7 @@ function exitHistoryPreview() {
     currentSessionName = "";
     rowUtangMode = {};
     printCounters = {};
+    customerRows = [{ name: DEFAULT_NAMES[0] || "", dry: "", fresh: "", cab: "", bo: "", bal: "", billing: "0", pay: "", rem: "0", utangMode: false }];
 
     updateSessionDateDisplay();
     clearAllLedgerInputs();
@@ -1176,7 +1293,7 @@ function exitHistoryPreview() {
 }
 
 // ============================================================
-// HISTORY UI WITH PREVIEW, EDIT, AND DELETE FEATURES
+// HISTORY UI
 // ============================================================
 
 function renderHistoryUI(selectedDateKey = null) {
@@ -1547,6 +1664,7 @@ ESC_ALIGN_CENTER +
 // TARGETED SCREENSHOT FUNCTION
 // ============================================================
 function takeScreenshot() {
+    harvestTableValues();
     const sessionBar = document.querySelector('.session-bar');
     const table2 = document.querySelector('.table-box-2');
     const table3 = document.querySelector('.table-box-3');
@@ -1566,6 +1684,10 @@ function takeScreenshot() {
 
     const clonedTable2 = table2.cloneNode(true);
     
+    // Hide the "+ TAP HERE TO ADD NEW ROW" button in screenshot
+    const addRowTr = clonedTable2.querySelector('#addRowTr');
+    if (addRowTr) addRowTr.style.display = 'none';
+
     const scrollBox = clonedTable2.querySelector('.table-scroll-container');
     if (scrollBox) {
         scrollBox.style.maxHeight = 'none';
@@ -1630,6 +1752,9 @@ function handleActiveCustomerNameChange(val) {
     if (currentNameEl) {
         currentNameEl.value = val;
     }
+    if (customerRows[activeRow - 1]) {
+        customerRows[activeRow - 1].name = val;
+    }
     saveLedger();
 }
 
@@ -1647,7 +1772,16 @@ function updateActiveCustomerName(row) {
 function loadRowToMain(row) {
     if (!isEditingActive || isPreviewMode || currentTableViewMode === "PRINT_HISTORY") return;
 
+    harvestTableValues();
     activeRow = row;
+
+    // Highlight active row background in table
+    for (let i = 1; i <= customerRows.length; i++) {
+        const nameInput = document.getElementById(`ledgerName_${i}`);
+        if (nameInput) {
+            nameInput.style.backgroundColor = (i === activeRow) ? 'white' : '#e5e7eb';
+        }
+    }
     
     const currentName = document.getElementById(`ledgerName_${row}`)?.value || "";
     const topInput = document.getElementById("activeCustomerInput");

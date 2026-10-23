@@ -1491,3 +1491,23 @@ ESC_ALIGN_CENTER +
 
     await sendToPrinter(singleReceiptText);
 }
+// ============================================================
+// SCREENSHOT CAPTURE FUNCTION
+// ============================================================
+function takeScreenshot() {
+    const targetElement = document.querySelector('.main-wrapper') || document.body;
+    
+    html2canvas(targetElement, { 
+        scale: 2, // Para mataas ang kalidad/linaw ng image
+        useCORS: true 
+    }).then(canvas => {
+        const link = document.createElement('a');
+        const fileName = `miki-ledger-${currentSessionDate || 'shot'}.png`;
+        link.download = fileName;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }).catch(err => {
+        console.error("Screenshot Error:", err);
+        alert("Hindi makagawa ng screenshot. Subukan ulit.");
+    });
+}

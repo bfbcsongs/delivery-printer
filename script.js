@@ -2,7 +2,7 @@
 // DEFAULT CUSTOMER NAMES (Rows 1 to 50)
 // ============================================================
 const DEFAULT_NAMES = [
-    "Rasel", "Cess", "Ed", "Risa", "Rakel", "Lina", 
+    "Rassel", "Cess", "Ed", "Risa", "Rakel", "Lina", 
     "7/11", "Leah", "Jeny", 
     "Sweet", "Lany", "Jean", "Ling²", "", "", "Flor",
     "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
@@ -65,7 +65,7 @@ let activeRow = 1;
 
 let tapCount = 0;
 let tapTimer = null;
-let isLocked = true;
+let isLocked = false; // UNLOCKED BY DEFAULT FOR CUSTOMER NAMES
 
 let priceTapCount = 0;
 let priceTapTimer = null;
@@ -333,7 +333,7 @@ function throttledResetInactivityTimer() {
 });
 
 // ============================================================
-// ENABLE / DISABLE ENCODING
+// ENABLE / DISABLE ENCODING (NAKA-ALLOW NA ULIT ANG NAMES)
 // ============================================================
 
 function setEncodingEditable(editable) {
@@ -346,6 +346,14 @@ function setEncodingEditable(editable) {
         if (!input.classList.contains('readonly-col')) {
             input.disabled = !editable;
         }
+    });
+
+    // Sinisiguradong e-edit pa rin ang customer name inputs
+    const nameInputs = document.querySelectorAll('.name-input');
+    nameInputs.forEach(input => {
+        input.disabled = !editable;
+        input.readOnly = false;
+        input.style.backgroundColor = "white";
     });
 }
 

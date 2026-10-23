@@ -487,261 +487,68 @@
 
     </div>
 
-
     <!-- =========================================================
-         3. SECOND TABLE / CUSTOMER LIST (50 ROWS SCROLLABLE)
-         ========================================================= -->
-
-    <div class="table-box table-box-2 customer-list-watermark">
-
-        <div class="customer-day-watermark"
-             id="customerDayWatermark">
-            --
-        </div>
-
-        <!-- Scrollable Table Container -->
-        <div class="table-scroll-container">
-            <table>
-
-                <colgroup>
-                    <col style="width:14%;">
-                    <col style="width:8%;">
-                    <col style="width:8%;">
-                    <col style="width:8%;">
-                    <col style="width:8%;">
-                    <col style="width:14%;">
-                    <col style="width:14%;">
-                    <col style="width:14%;">
-                    <col style="width:12%;">
-                </colgroup>
-
-
-                <thead>
-
-                    <tr>
-
-                        <th id="lockHeader"
-                            class="lockable-header"
-                            onclick="handleKeyClick()"
-                            title="Tap 5 times to Lock/Unlock">
-                            🔒
-                        </th>
-
-                        <th>
-                            Dry
-                        </th>
-
-                        <th>
-                            Fresh
-                        </th>
-
-                        <th>
-                            Cab
-                        </th>
-
-                        <th>
-                            BO
-                        </th>
-
-                        <th>
-                            Bal
-                        </th>
-
-                        <th>
-                            Billing
-                        </th>
-
-                        <th class="colln-header">
-                            Coll'n
-                        </th>
-
-                        <th>
-                            Utang
-                        </th>
-
-                    </tr>
-
-                </thead>
-
-
-                <tbody>
-
-                    <script>
-
-                        for (let i = 1; i <= 50; i++) {
-
-                            document.write(`
-
-                                <tr>
-
-                                    <td>
-
-                                        <input type="text"
-                                               class="name-input"
-                                               id="ledgerName_${i}"
-                                               oninput="updateActiveCustomerName(${i}); saveLedger();"
-                                               onfocus="loadRowToMain(${i})"
-                                               readonly
-                                               style="background-color:#e5e7eb;">
-
-                                    </td>
-
-
-                                    <td>
-
-                                        <input type="text"
-                                               class="readonly-col"
-                                               id="ledgerDry_${i}"
-                                               readonly
-                                               onfocus="loadRowToMain(${i})">
-
-                                    </td>
-
-
-                                    <td>
-
-                                        <input type="text"
-                                               class="readonly-col"
-                                               id="ledgerFresh_${i}"
-                                               readonly
-                                               onfocus="loadRowToMain(${i})">
-
-                                    </td>
-
-
-                                    <td>
-
-                                        <input type="text"
-                                               class="readonly-col"
-                                               id="ledgerCab_${i}"
-                                               readonly
-                                               onfocus="loadRowToMain(${i})">
-
-                                    </td>
-
-
-                                    <td>
-
-                                        <input type="text"
-                                               class="readonly-col"
-                                               id="ledgerBo_${i}"
-                                               readonly
-                                               onfocus="loadRowToMain(${i})">
-
-                                    </td>
-
-
-                                    <td>
-
-                                        <input type="text"
-                                               class="readonly-col"
-                                               id="ledgerBal_${i}"
-                                               readonly
-                                               onfocus="loadRowToMain(${i})">
-
-                                    </td>
-
-
-                                    <td>
-
-                                        <input type="text"
-                                               class="readonly-col amount"
-                                               id="ledgerBilling_${i}"
-                                               readonly>
-
-                                    </td>
-
-
-                                    <td>
-
-                                        <input type="text"
-                                               class="readonly-col colln-input"
-                                               id="ledgerPay_${i}"
-                                               readonly
-                                               onclick="handleRowCollTap(${i})"
-                                               onfocus="loadRowToMain(${i})">
-
-                                    </td>
-
-
-                                    <td>
-
-                                        <input type="text"
-                                               class="readonly-col amount"
-                                               id="ledgerRem_${i}"
-                                               readonly>
-
-                                    </td>
-
-                                </tr>
-
-                            `);
-
-                        }
-
-                    </script>
-
-
-                    <tr>
-
-                        <td class="miki"
-                            style="
-                                color:#dc2626;
-                                font-size:9px;
-                                padding:0 1px;
-                            ">
-                            NET TOTAL
-                        </td>
-
-                        <td class="net-total-red"
-                            id="totalDry">
-                            0
-                        </td>
-
-                        <td class="net-total-red"
-                            id="totalFresh">
-                            0
-                        </td>
-
-                        <td class="net-total-red"
-                            id="totalCab">
-                            0
-                        </td>
-
-                        <td class="net-total-red"
-                            id="totalBo">
-                            0
-                        </td>
-
-                        <td class="net-total-red"
-                            id="totalBal">
-                            0
-                        </td>
-
-                        <td class="net-total-red"
-                            id="totalBilling">
-                            0
-                        </td>
-
-                        <td class="net-total-red"
-                            id="totalColln">
-                            0
-                        </td>
-
-                        <td class="net-total-red"
-                            id="totalRem">
-                            0
-                        </td>
-
-                    </tr>
-
-                </tbody>
-
-            </table>
-        </div>
-
+     SECOND TABLE / CUSTOMER LIST (DYNAMIC ROWS)
+     ========================================================= -->
+<div class="table-box table-box-2 customer-list-watermark">
+
+    <div class="customer-day-watermark" id="customerDayWatermark">
+        --
     </div>
 
+    <!-- Scrollable Table Container -->
+    <div class="table-scroll-container">
+        <table>
+
+            <colgroup>
+                <col style="width:14%;">
+                <col style="width:8%;">
+                <col style="width:8%;">
+                <col style="width:8%;">
+                <col style="width:8%;">
+                <col style="width:14%;">
+                <col style="width:14%;">
+                <col style="width:14%;">
+                <col style="width:12%;">
+            </colgroup>
+
+            <thead>
+                <tr>
+                    <th id="lockHeader" class="lockable-header" onclick="handleKeyClick()" title="Tap 5 times to Lock/Unlock">🔒</th>
+                    <th>Dry</th>
+                    <th>Fresh</th>
+                    <th>Cab</th>
+                    <th>BO</th>
+                    <th>Bal</th>
+                    <th>Billing</th>
+                    <th class="colln-header">Coll'n</th>
+                    <th>Utang</th>
+                </tr>
+            </thead>
+
+            <!-- DYNAMIC ROWS CONTAINER -->
+            <tbody id="ledgerTableBody">
+                <!-- Kusang manggaling sa script.js ang mga rows -->
+            </tbody>
+
+            <tfoot>
+                <tr>
+                    <td class="miki" style="color:#dc2626; font-size:9px; padding:0 1px;">NET TOTAL</td>
+                    <td class="net-total-red" id="totalDry">0</td>
+                    <td class="net-total-red" id="totalFresh">0</td>
+                    <td class="net-total-red" id="totalCab">0</td>
+                    <td class="net-total-red" id="totalBo">0</td>
+                    <td class="net-total-red" id="totalBal">0</td>
+                    <td class="net-total-red" id="totalBilling">0</td>
+                    <td class="net-total-red" id="totalColln">0</td>
+                    <td class="net-total-red" id="totalRem">0</td>
+                </tr>
+            </tfoot>
+
+        </table>
+    </div>
+
+</div>
 
     <!-- =========================================================
          THIRD TABLE

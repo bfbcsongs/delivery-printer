@@ -864,28 +864,29 @@ body.preview-mode .session-bar {
     cursor: pointer;
     transition: background-color 0.2s, opacity 0.2s;
 }
-/* Pinaikling max-height para sakto ang kita ng mga rows at makita ang Notes sa baba */
+/* Tinaasan ang max-height para magkasya ang nasa 25-30 rows sa screen view */
 .table-scroll-container {
-    max-height: 360px; /* Sakto para makita ang ~15-16 rows nang sabay-sabay */
+    max-height: 750px; /* Dinagdagan ang taas mula 360px/650px para makita ang 25+ rows */
     overflow-y: auto;
     overflow-x: auto;
     border: 1px solid #cbd5e1;
     border-radius: 8px;
 }
 
-/* Ginawang mas compact ang bawat cell at input para hindi masyadong matangkad */
+/* Siguraduhing sakto at compact ang laki ng inputs */
 .table-scroll-container table th {
-    padding: 4px 2px;
+    padding: 5px 3px;
     font-size: 11px;
 }
 
 .table-scroll-container table td {
-    padding: 1px 2px;
+    padding: 2px;
 }
 
 .table-scroll-container table input {
-    height: 21px;
-    padding: 1px 3px;
-    font-size: 11px;
-    line-height: 1;
+    height: 24px;
+    padding: 2px 4px;
+    font-size: 12px;
+    line-height: 1.2;
 }
+

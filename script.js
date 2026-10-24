@@ -1856,7 +1856,7 @@ async function printRowReceipt(rowNum) {
     const paymentText = "P " + payment.toFixed(2);
     const utangText = "P " + utang.toFixed(2);
 
-    const singleReceiptText = ESC_INIT + ESC_FONT_A + ESC_ALIGN_CENTER +
+        const singleReceiptText = ESC_INIT + ESC_FONT_A + ESC_ALIGN_CENTER +
 "================================\n" +
 "         Blessed Day po         \n" +
 "================================\n" +
@@ -1867,7 +1867,7 @@ ESC_ALIGN_LEFT +
 "Customer: " + customerName + "\n" +
 "Print Copy #" + currentCount + "\n" +
 "--------------------------------\n" +
-"ITEM    QTY               AMOUNT\n" +
+"ITEM   QTY                AMOUNT\n" +
 "--------------------------------\n" +
 itemLine1   + "\n" +
 itemLine2   + "\n" +
@@ -1884,7 +1884,7 @@ itemLine4   + "\n" +
 "Balance:      " + utangText.padStart(18, ' ') + "\n" +
 "================================\n" +
 ESC_ALIGN_CENTER +
-"  Salamat po sa Pagtangkilik!  \n" +
+" Salamat po sa Pagtangkilik! \n" +
 "================================\n\n\n\n\n\n";
 
 

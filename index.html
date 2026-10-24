@@ -569,34 +569,3 @@
 <script src="script.js"></script>
 </body>
 </html>
-/* Table 2 Compact Font Size & Width Fix para hindi maputol ang mga numero */
-.table-box-2 table {
-    table-layout: fixed;
-    width: 100%;
-}
-
-.table-box-2 table th {
-    font-size: 10px !important;
-    padding: 3px 1px !important;
-    white-space: nowrap;
-}
-
-.table-box-2 table td input {
-    font-size: 11px !important;
-    padding: 1px !important;
-    text-align: center;
-}
-
-.table-box-2 table td {
-    padding: 1px !important;
-}
-
-/* Hide Table 1, Sync Panel, Table 3, at Saved Files kapag nasa Print History View */
-body.print-history-active .table-box:first-of-type,
-body.print-history-active .sync-panel,
-body.print-history-active .table-box-3,
-body.print-history-active #historyContainer,
-body.print-history-active .history-container,
-body.print-history-active div:has(> #historyContainer) {
-    display: none !important;
-}

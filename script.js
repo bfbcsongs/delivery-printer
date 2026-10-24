@@ -2000,11 +2000,13 @@ async function printRowReceipt(rowNum) {
         LINE + "\n" +
         "BILLING:     " + billingText.padStart(17, " ") + "\n" +
         "PREV. BAL:   " + balText.padStart(17, " ") + "\n" +
-        "GRAND TOTAL:     " + grandText.padStart(31, " ") + "\n" +
+        LINE + "\n" +
+        "GRAND TOTAL: " + grandText.padStart(17, " ") + "\n" +
         LINE + "\n" +
         "Payment:     " + paymentText.padStart(17, " ") + "\n" +
         LINE + "\n" +
         "Balance:     " + utangText.padStart(17, " ") + "\n" +
+
         EQUAL + "\n" +
         ESC_ALIGN_CENTER +
         centerText("Salamat po sa Pagtangkilik!") + "\n" +

@@ -1776,7 +1776,7 @@ async function sendToPrinter(textData) {
 }
 
 // ============================================================
-// PRINT ACTIVE ROW RECEIPT — SAFE WRAPPER WITH ERROR CATCHING
+// PRINT ACTIVE ROW RECEIPT — COMPLETE WITH HARDWARE FEED
 // ============================================================
 let isPrintingActive = false;
 
@@ -1970,6 +1970,13 @@ async function printRowReceipt(rowNum) {
     const paymentText = "P " + money(payment);
     const utangText = "P " + money(utang);
 
+    // ========================================================
+    // HARDWARE FEED COMMAND PARA SA BOTTOM MARGIN
+    // (Palitan ang 08 kung gusto mo pang habaan o iklian: 
+    // halimbawa \x1B\x64\x0A para sa mas mahabang espasyo)
+    // ========================================================
+    const ESC_FEED = "\x1B\x64\x08"; 
+
     const singleReceiptText =
         ESC_INIT +
         ESC_FONT_A +
@@ -1994,7 +2001,7 @@ async function printRowReceipt(rowNum) {
         "BILLING:     " + billingText.padStart(17, " ") + "\n" +
         "PREV. BAL:   " + balText.padStart(17, " ") + "\n" +
         LINE + "\n" +
-        "GRAND TOTAL: " + grandText.padStart(15, " ") + "\n" +
+        "GRAND TOTAL: " + grandText.padStart(13, " ") + "\n" +
         LINE + "\n" +
         "Payment:     " + paymentText.padStart(17, " ") + "\n" +
         LINE + "\n" +
@@ -2002,7 +2009,8 @@ async function printRowReceipt(rowNum) {
         EQUAL + "\n" +
         ESC_ALIGN_CENTER +
         centerText("Salamat po sa Pagtangkilik!") + "\n" +
-        EQUAL + "\n\n\n\n\n\n\n\n\n\n\n\n\n";
+        EQUAL +
+        ESC_FEED; // <-- ETO ANG NASA PINAKADULO NG TEXT BAGO IPADALA SA PRINTER
 
     await sendToPrinter(singleReceiptText);
 }

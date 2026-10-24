@@ -1863,10 +1863,10 @@ ESC_ALIGN_LEFT +
 "--------------------------------\n" +
 "ITEM      QTY              AMOUNT        AMOUNT\n" +
 "--------------------------------\n" +
-itemLine1           + "\n" +
-itemLine2           + "\n" +
-itemLine3           + "\n" +
-itemLine4           + "\n" +
+itemLine1  + "\n" +
+itemLine2  + "\n" +
+itemLine3  + "\n" +
+itemLine4  + "\n" +
 "--------------------------------\n" +
 "BILLING:         " + ("P " + billing.toFixed(2)).padStart(16, ' ') + "\n" +
 "PREV. BAL:       " + ("P " + bal.toFixed(2)).padStart(16, ' ') + "\n" +

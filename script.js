@@ -2002,7 +2002,7 @@ async function printRowReceipt(rowNum) {
         EQUAL + "\n" +
         ESC_ALIGN_CENTER +
         centerText("Salamat po sa Pagtangkilik!") + "\n" +
-        EQUAL + "\n\n\n\n\n\n\n\n\n\n";
+        EQUAL + "\n\n\n\n\n\n\n\n\n\n\n\n\n";
 
     await sendToPrinter(singleReceiptText);
 }

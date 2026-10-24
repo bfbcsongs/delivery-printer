@@ -1850,6 +1850,12 @@ async function printRowReceipt(rowNum) {
     const itemLine3 = formatReceiptLine("CAB", cab, cabAmt);
     const itemLine4 = formatReceiptLine("BO", bo, boAmt);
 
+        const billingText = "P " + billing.toFixed(2);
+    const balText = "P " + bal.toFixed(2);
+    const grandText = "P " + grandTotal.toFixed(2);
+    const paymentText = "P " + payment.toFixed(2);
+    const utangText = "P " + utang.toFixed(2);
+
     const singleReceiptText = ESC_INIT + ESC_FONT_A + ESC_ALIGN_CENTER +
 "================================\n" +
 "         Blessed Day po         \n" +
@@ -1861,25 +1867,26 @@ ESC_ALIGN_LEFT +
 "Customer: " + customerName + "\n" +
 "Print Copy #" + currentCount + "\n" +
 "--------------------------------\n" +
-"ITEM      QTY              AMOUNT        AMOUNT\n" +
+"ITEM    QTY               AMOUNT\n" +
 "--------------------------------\n" +
-itemLine1  + "\n" +
-itemLine2  + "\n" +
-itemLine3  + "\n" +
-itemLine4  + "\n" +
+itemLine1   + "\n" +
+itemLine2   + "\n" +
+itemLine3   + "\n" +
+itemLine4   + "\n" +
 "--------------------------------\n" +
-"BILLING:         " + ("P " + billing.toFixed(2)).padStart(16, ' ') + "\n" +
-"PREV. BAL:       " + ("P " + bal.toFixed(2)).padStart(16, ' ') + "\n" +
+"BILLING:      " + billingText.padStart(18, ' ') + "\n" +
+"PREV. BAL:    " + balText.padStart(18, ' ') + "\n" +
 "--------------------------------\n" +
-"GRAND TOTAL:     " + ("P " + grandTotal.toFixed(2)).padStart(16, ' ') + "\n" +
+"GRAND TOTAL:  " + grandText.padStart(18, ' ') + "\n" +
 "--------------------------------\n" +
-"Payment:         " + ("P " + payment.toFixed(2)).padStart(16, ' ') + "\n" +
+"Payment:      " + paymentText.padStart(18, ' ') + "\n" +
 "--------------------------------\n" +
-"Balance:         " + ("P " + utang.toFixed(2)).padStart(16, ' ') + "\n" +
+"Balance:      " + utangText.padStart(18, ' ') + "\n" +
 "================================\n" +
 ESC_ALIGN_CENTER +
 "  Salamat po sa Pagtangkilik!  \n" +
 "================================\n\n\n\n\n\n";
+
 
     await sendToPrinter(singleReceiptText);
 }

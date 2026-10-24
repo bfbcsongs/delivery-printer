@@ -144,7 +144,6 @@ function setupKeyboardShortcuts() {
 // ============================================================
 
 function ensureHistoryBuffer() {
-    // Keep multiple depth entries so rapid back presses never escape
     window.history.pushState({ page: 'miki_ledger' }, '', window.location.href);
     window.history.pushState({ page: 'miki_ledger' }, '', window.location.href);
 }
@@ -152,7 +151,6 @@ function ensureHistoryBuffer() {
 function setupInstantBackIntercept() {
     ensureHistoryBuffer();
 
-    // Re-lock history on every tap across the screen
     ['touchstart', 'click', 'keydown'].forEach(evt => {
         document.addEventListener(evt, () => {
             if (!allowExit) {
@@ -164,12 +162,12 @@ function setupInstantBackIntercept() {
     window.addEventListener('popstate', (e) => {
         if (allowExit) return;
 
-        // Immediately replenish state synchronously with NO delay
         window.history.pushState({ page: 'miki_ledger' }, '', window.location.href);
 
         // 1. Switch Print History back to Customers table
         if (typeof currentTableViewMode !== 'undefined' && currentTableViewMode === "PRINT_HISTORY") {
             currentTableViewMode = "CUSTOMERS";
+            document.body.classList.remove("print-history-active");
             restoreCustomersToTable();
             updateToggleBtnUI();
             return;
@@ -204,7 +202,6 @@ function showExitModal() {
 function cancelExitApp() {
     const exitModal = document.getElementById("exitConfirmModal");
     if (exitModal) exitModal.style.display = "none";
-    // Re-lock buffer immediately when user cancels
     ensureHistoryBuffer();
 }
 
@@ -213,7 +210,6 @@ function confirmExitApp() {
     const exitModal = document.getElementById("exitConfirmModal");
     if (exitModal) exitModal.style.display = "none";
 
-    // Unpin/exit app back navigation
     window.history.go(-2);
     setTimeout(() => {
         window.close();
@@ -454,10 +450,9 @@ function addNewCustomerRow() {
 }
 
 // ============================================================
-// VIEW SWITCHER & PRINT AUDIT LOG SYSTEM
+// SINGLE-TAP VIEW SWITCHER & PRINT AUDIT LOG SYSTEM
 // ============================================================
 let currentTableViewMode = "CUSTOMERS";
-let longPressTimer = null;
 
 function setupViewSwitcher() {
     const viewToggleBtn = document.getElementById("viewToggleBtn");
@@ -466,47 +461,22 @@ function setupViewSwitcher() {
         const newBtn = viewToggleBtn.cloneNode(true);
         viewToggleBtn.parentNode.replaceChild(newBtn, viewToggleBtn);
 
-        newBtn.addEventListener("touchstart", (e) => {
+        // Single tap switch listener
+        newBtn.addEventListener("click", (e) => {
             e.preventDefault();
-            startLongPressToggle();
-        }, { passive: false });
-
-        newBtn.addEventListener("touchend", (e) => {
-            e.preventDefault();
-            cancelLongPressToggle();
-        }, { passive: false });
-
-        newBtn.addEventListener("touchcancel", cancelLongPressToggle);
-
-        newBtn.addEventListener("mousedown", startLongPressToggle);
-        newBtn.addEventListener("mouseup", cancelLongPressToggle);
-        newBtn.addEventListener("mouseleave", cancelLongPressToggle);
+            toggleTableViewMode();
+        });
     }
-}
-
-function startLongPressToggle() {
-    const viewToggleBtn = document.getElementById("viewToggleBtn");
-    if (!viewToggleBtn) return;
-    viewToggleBtn.style.opacity = "0.6";
-    viewToggleBtn.innerText = "⏳ HOLDING... (3s)";
-
-    clearTimeout(longPressTimer);
-    longPressTimer = setTimeout(() => {
-        toggleTableViewMode();
-    }, 3000);
-}
-
-function cancelLongPressToggle() {
-    clearTimeout(longPressTimer);
-    updateToggleBtnUI();
 }
 
 function toggleTableViewMode() {
     if (currentTableViewMode === "CUSTOMERS") {
         currentTableViewMode = "PRINT_HISTORY";
+        document.body.classList.add("print-history-active");
         renderPrintHistoryToTable();
     } else {
         currentTableViewMode = "CUSTOMERS";
+        document.body.classList.remove("print-history-active");
         restoreCustomersToTable();
     }
     updateToggleBtnUI();
@@ -516,12 +486,12 @@ function toggleTableViewMode() {
 function updateToggleBtnUI() {
     const viewToggleBtn = document.getElementById("viewToggleBtn");
     if (!viewToggleBtn) return;
-    viewToggleBtn.style.opacity = "1";
+    
     if (currentTableViewMode === "CUSTOMERS") {
-        viewToggleBtn.innerText = "📋 VIEW: CUSTOMERS TABLE (Hold 3s to Switch)";
+        viewToggleBtn.innerText = "📋 VIEW: CUSTOMERS TABLE (Tap to Switch)";
         viewToggleBtn.style.backgroundColor = "#2563eb";
     } else {
-        viewToggleBtn.innerText = "🖨️ VIEW: PRINT HISTORY LOG (Hold 3s to Switch)";
+        viewToggleBtn.innerText = "🖨️ VIEW: PRINT HISTORY LOG (Tap to Switch)";
         viewToggleBtn.style.backgroundColor = "#d97706";
     }
 }
@@ -1321,7 +1291,6 @@ function saveLedger() {
 
     localStorage.setItem("miki_ledger_data", JSON.stringify(ledgerData));
 
-    // Auto-sync with daily 30-day history archive immediately
     let history = JSON.parse(localStorage.getItem("miki_30day_history") || "[]");
     const existingIndex = history.findIndex(item => item.date === ledgerData.date);
 
@@ -1680,7 +1649,6 @@ function deleteHistoryFile(dateKey) {
 function loadLedger() {
     restoreGlobalPrices();
     
-    // Render customer table rows immediately on load so the add row button is present
     renderCustomerTableBody();
     renderHistoryUI();
 
@@ -1696,7 +1664,6 @@ function loadLedger() {
     setEncodingEditable(false);
     updateSessionDateDisplay();
 
-    // Restore existing draft session if present
     const activeDraft = JSON.parse(localStorage.getItem("miki_ledger_data"));
     if (activeDraft && activeDraft.date) {
         restoreLedgerData(activeDraft);

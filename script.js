@@ -1853,7 +1853,7 @@ ESC_ALIGN_LEFT +
 "Print Copy #" + currentCount + "\n" +
 "--------------------------------\n" +
 "ITEM    QTY           AMOUNT    \n" +
-"--------------------------------\n" +
+"-----------------------------\n" +
 itemLine1   + "\n" +
 itemLine2   + "\n" +
 itemLine3   + "\n" +
@@ -1863,6 +1863,7 @@ itemLine4   + "\n" +
 "PREV. BAL:        P " + String(bal.toFixed(2)).padStart(10) + "\n" +
 "--------------------------------\n" +
 "GRAND TOTAL:      P " + String(grandTotal.toFixed(2)).padStart(10) + "\n" +
+"--------------------------------\n" +
 "Payment:          P " + String(payment.toFixed(2)).padStart(10) + "\n" +
 "--------------------------------\n" +
 "Balance:          P " + String(utang.toFixed(2)).padStart(10) + "\n" +

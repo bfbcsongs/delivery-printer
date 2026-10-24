@@ -1836,7 +1836,7 @@ async function printRowReceipt(rowNum) {
     const ESC_ALIGN_LEFT = "\x1B\x61\x00";
     const ESC_FONT_A = "\x1B\x21\x00";
 
-        // Helper function para sa pantay na resibo
+    // Helper function para sa pantay na resibo
     function formatReceiptLine(item, qty, amount) {
         const itemCol = String(item).padEnd(6, ' ');     
         const qtyCol = String(qty).padStart(4, ' ');       
@@ -1868,14 +1868,14 @@ itemLine2   + "\n" +
 itemLine3   + "\n" +
 itemLine4   + "\n" +
 "--------------------------------\n" +
-"BILLING:          P " + String(billing.toFixed(2)).padStart(10) + "\n" +
-"PREV. BAL:        P " + String(bal.toFixed(2)).padStart(10) + "\n" +
+"BILLING:         " + ("P " + billing.toFixed(2)).padStart(16, ' ') + "\n" +
+"PREV. BAL:       " + ("P " + bal.toFixed(2)).padStart(16, ' ') + "\n" +
 "--------------------------------\n" +
-"GRAND TOTAL:      P " + String(grandTotal.toFixed(2)).padStart(10) + "\n" +
+"GRAND TOTAL:     " + ("P " + grandTotal.toFixed(2)).padStart(16, ' ') + "\n" +
 "--------------------------------\n" +
-"Payment:          P " + String(payment.toFixed(2)).padStart(10) + "\n" +
+"Payment:         " + ("P " + payment.toFixed(2)).padStart(16, ' ') + "\n" +
 "--------------------------------\n" +
-"Balance:          P " + String(utang.toFixed(2)).padStart(10) + "\n" +
+"Balance:         " + ("P " + utang.toFixed(2)).padStart(16, ' ') + "\n" +
 "================================\n" +
 ESC_ALIGN_CENTER +
 "  Salamat po sa Pagtangkilik!  \n" +

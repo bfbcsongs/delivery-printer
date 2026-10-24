@@ -904,4 +904,26 @@ body.print-history-active .table-box:first-of-type,
 body.print-history-active .sync-panel {
     display: none !important;
 }
+/* Table 2 Optimization */
+.table-box-2 table {
+    table-layout: fixed; /* Tinitiyak na sinusunod ang colgroup widths */
+    width: 100%;
+}
+
+.table-box-2 table th {
+    font-size: 10px !important;
+    padding: 3px 1px !important;
+    white-space: nowrap;
+}
+
+.table-box-2 table td input {
+    font-size: 11px !important;
+    padding: 1px !important;
+    text-align: center;
+}
+
+/* Bawasan ang padding sa mismong cells para magkasya ang 3 hanggang 5 digits */
+.table-box-2 table td {
+    padding: 1px !important;
+}
 

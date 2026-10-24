@@ -1836,7 +1836,7 @@ async function printRowReceipt(rowNum) {
     const ESC_ALIGN_LEFT = "\x1B\x61\x00";
     const ESC_FONT_A = "\x1B\x21\x00";
 
-    // Helper function para sa pantay na resibo
+    // Helper function para sa pantay na 32-character line formatting
     function formatReceiptLine(item, qty, amount) {
         const itemCol = String(item).padEnd(6, ' ');     
         const qtyCol = String(qty).padStart(4, ' ');       
@@ -1850,13 +1850,13 @@ async function printRowReceipt(rowNum) {
     const itemLine3 = formatReceiptLine("CAB", cab, cabAmt);
     const itemLine4 = formatReceiptLine("BO", bo, boAmt);
 
-        const billingText = "P " + billing.toFixed(2);
+    const billingText = "P " + billing.toFixed(2);
     const balText = "P " + bal.toFixed(2);
     const grandText = "P " + grandTotal.toFixed(2);
     const paymentText = "P " + payment.toFixed(2);
     const utangText = "P " + utang.toFixed(2);
 
-        const singleReceiptText = ESC_INIT + ESC_FONT_A + ESC_ALIGN_CENTER +
+    const singleReceiptText = ESC_INIT + ESC_FONT_A + ESC_ALIGN_CENTER +
 "================================\n" +
 "         Blessed Day po         \n" +
 "================================\n" +
@@ -1887,9 +1887,9 @@ ESC_ALIGN_CENTER +
 " Salamat po sa Pagtangkilik! \n" +
 "================================\n\n\n\n\n\n";
 
-
     await sendToPrinter(singleReceiptText);
 }
+
 
 // ============================================================
 // TARGETED SCREENSHOT FUNCTION

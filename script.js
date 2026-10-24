@@ -1,4 +1,22 @@
 // ============================================================
+// EMERGENCY SERVICE WORKER KILLER (PANG-CLEAN NG LUMANG CACHE)
+// ============================================================
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+        for (let registration of registrations) {
+            registration.unregister();
+        }
+    });
+}
+if ('caches' in window) {
+    caches.keys().then(names => {
+        names.forEach(name => {
+            caches.delete(name);
+        });
+    });
+}
+
+// ============================================================
 // DEFAULT CUSTOMER NAMES
 // ============================================================
 const DEFAULT_NAMES = [
@@ -43,7 +61,7 @@ function installApp() {
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=2', {
+        navigator.serviceWorker.register('./sw.js?v=3', {
             scope: './'
         })
         .then(reg => {
@@ -1758,8 +1776,30 @@ async function sendToPrinter(textData) {
 }
 
 // ============================================================
-// PRINT ACTIVE ROW RECEIPT — FIXED THERMAL FORMAT
+// PRINT ACTIVE ROW RECEIPT — SAFE WRAPPER WITH ERROR CATCHING
 // ============================================================
+let isPrintingActive = false;
+
+async function printActiveRowReceipt() {
+    if (isPrintingActive) return;
+    
+    if (activeRow) {
+        isPrintingActive = true;
+        try {
+            await printRowReceipt(activeRow);
+        } catch (err) {
+            console.error("Print execution error:", err);
+            alert("Print Error: " + err.message);
+        } finally {
+            setTimeout(() => {
+                isPrintingActive = false;
+            }, 1200);
+        }
+    } else {
+        alert("Pumili muna ng customer bago mag-print!");
+    }
+}
+
 async function printRowReceipt(rowNum) {
     const d = new Date();
     const year = d.getFullYear();
@@ -1893,19 +1933,8 @@ async function printRowReceipt(rowNum) {
     const ESC_ALIGN_LEFT = "\x1B\x61\x00";
     const ESC_FONT_A = "\x1B\x21\x00";
 
-    // ========================================================
-    // SAFE RECEIPT WIDTH
-    //
-    // We intentionally use 30 characters instead of the full
-    // 32-character printer width. This prevents the final
-    // characters of a line from being clipped/wrapped.
-    // ========================================================
     const LINE = "------------------------------";
     const EQUAL = "==============================";
-
-    // ========================================================
-    // HELPERS
-    // ========================================================
 
     function money(value) {
         return Number(value).toFixed(2);
@@ -1922,15 +1951,6 @@ async function printRowReceipt(rowNum) {
         return " ".repeat(left) + text;
     }
 
-    /*
-     * Fixed item columns:
-     *
-     * ITEM       QTY      AMOUNT
-     * DRY         10      P 500.00
-     *
-     * AMOUNT is deliberately placed well before the
-     * printer's right edge.
-     */
     function formatItemLine(item, qty, amount) {
         const itemCol = String(item).padEnd(9, " ");
         const qtyCol = String(qty).padStart(4, " ");
@@ -1939,97 +1959,51 @@ async function printRowReceipt(rowNum) {
         return itemCol + qtyCol + "   " + amountCol;
     }
 
-    // ========================================================
-    // ITEM LINES
-    // ========================================================
     const itemLine1 = formatItemLine("DRY", dry, dryAmt);
     const itemLine2 = formatItemLine("FRESH", fresh, freshAmt);
     const itemLine3 = formatItemLine("CAB", cab, cabAmt);
     const itemLine4 = formatItemLine("BO", bo, boAmt);
 
-    // ========================================================
-    // MONEY TEXT
-    // ========================================================
     const billingText = "P " + money(billing);
     const balText = "P " + money(bal);
     const grandText = "P " + money(grandTotal);
     const paymentText = "P " + money(payment);
     const utangText = "P " + money(utang);
 
-    // ========================================================
-    // RECEIPT
-    // ========================================================
     const singleReceiptText =
         ESC_INIT +
         ESC_FONT_A +
-
-        // ----------------------------------------------------
-        // HEADER
-        // ----------------------------------------------------
         ESC_ALIGN_CENTER +
         EQUAL + "\n" +
         centerText("Blessed Day po") + "\n" +
         EQUAL + "\n" +
-
-        // ----------------------------------------------------
-        // CUSTOMER INFORMATION
-        // ----------------------------------------------------
         ESC_ALIGN_LEFT +
         "Date: " + dateVal + "\n" +
         "Time: " + timeVal + "\n" +
         "Route: " + routeName + "\n" +
         "Customer: " + customerName + "\n" +
         "Print Copy #" + currentCount + "\n" +
-
         LINE + "\n" +
-
-        // ----------------------------------------------------
-        // ITEM HEADER
-        //
-        // IMPORTANT:
-        // AMOUNT is now at a safe position and no longer
-        // touches the printer's last character column.
-        // ----------------------------------------------------
         "ITEM       QTY      AMOUNT\n" +
-
         LINE + "\n" +
-
         itemLine1 + "\n" +
         itemLine2 + "\n" +
         itemLine3 + "\n" +
         itemLine4 + "\n" +
-
         LINE + "\n" +
-
-        // ----------------------------------------------------
-        // BILLING
-        // ----------------------------------------------------
         "BILLING:     " + billingText.padStart(17, " ") + "\n" +
         "PREV. BAL:   " + balText.padStart(17, " ") + "\n" +
-
         LINE + "\n" +
-
         "GRAND TOTAL: " + grandText.padStart(15, " ") + "\n" +
-
         LINE + "\n" +
-
         "Payment:     " + paymentText.padStart(17, " ") + "\n" +
-
         LINE + "\n" +
-
         "Balance:     " + utangText.padStart(17, " ") + "\n" +
-
-        // ----------------------------------------------------
-        // FOOTER
-        // ----------------------------------------------------
         EQUAL + "\n" +
         ESC_ALIGN_CENTER +
         centerText("Salamat po sa Pagtangkilik!") + "\n" +
         EQUAL + "\n\n\n\n\n\n";
 
-    // ========================================================
-    // SEND TO PRINTER
-    // ========================================================
     await sendToPrinter(singleReceiptText);
 }
 

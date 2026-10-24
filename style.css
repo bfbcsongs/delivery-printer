@@ -889,4 +889,19 @@ body.preview-mode .session-bar {
     font-size: 12px;
     line-height: 1.2;
 }
+/* Table 2 Font Size Adjustment */
+.table-box-2 table td input {
+    font-size: 13px !important;
+    padding: 2px !important;
+}
+
+.table-box-2 table th {
+    font-size: 12px !important;
+}
+
+/* Hide Table 1 & Sync Panel during Print History View */
+body.print-history-active .table-box:first-of-type,
+body.print-history-active .sync-panel {
+    display: none !important;
+}
 

@@ -1836,10 +1836,19 @@ async function printRowReceipt(rowNum) {
     const ESC_ALIGN_LEFT = "\x1B\x61\x00";
     const ESC_FONT_A = "\x1B\x21\x00";
 
-    const itemLine1 = "DRY   " + String(dry).padEnd(5) + "    P " + String(dryAmt.toFixed(2)).padStart(8);
-    const itemLine2 = "FRESH " + String(fresh).padEnd(5) + "    P " + String(freshAmt.toFixed(2)).padStart(8);
-    const itemLine3 = "CAB   " + String(cab).padEnd(5) + "    P " + String(cabAmt.toFixed(2)).padStart(8);
-    const itemLine4 = "BO    " + String(bo).padEnd(5) + "    P " + String(boAmt.toFixed(2)).padStart(8);
+        // Helper function para sa pantay na resibo
+    function formatReceiptLine(item, qty, amount) {
+        const itemCol = String(item).padEnd(6, ' ');     
+        const qtyCol = String(qty).padStart(4, ' ');       
+        const amtStr = "P " + Number(amount).toFixed(2);
+        const amtCol = amtStr.padStart(12, ' ');          
+        return itemCol + "  " + qtyCol + "  " + amtCol;    
+    }
+
+    const itemLine1 = formatReceiptLine("DRY", dry, dryAmt);
+    const itemLine2 = formatReceiptLine("FRESH", fresh, freshAmt);
+    const itemLine3 = formatReceiptLine("CAB", cab, cabAmt);
+    const itemLine4 = formatReceiptLine("BO", bo, boAmt);
 
     const singleReceiptText = ESC_INIT + ESC_FONT_A + ESC_ALIGN_CENTER +
 "================================\n" +

@@ -43,7 +43,7 @@ function installApp() {
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1', {
+        navigator.serviceWorker.register('./sw.js?v=2', {
             scope: './'
         })
         .then(reg => {
@@ -1856,20 +1856,6 @@ async function printRowReceipt(rowNum) {
     const paymentText = "P " + payment.toFixed(2);
     const utangText = "P " + utang.toFixed(2);
 
-        // Tiyaking 32 characters eksakto ang bawat linya
-    const billingText = "P " + billing.toFixed(2);
-    const balText = "P " + bal.toFixed(2);
-    const grandText = "P " + grandTotal.toFixed(2);
-    const paymentText = "P " + payment.toFixed(2);
-    const utangText = "P " + utang.toFixed(2);
-
-    // Tiyaking 32 characters eksakto ang bawat linya
-    const billingText = "P " + billing.toFixed(2);
-    const balText = "P " + bal.toFixed(2);
-    const grandText = "P " + grandTotal.toFixed(2);
-    const paymentText = "P " + payment.toFixed(2);
-    const utangText = "P " + utang.toFixed(2);
-
     const singleReceiptText = ESC_INIT + ESC_FONT_A + ESC_ALIGN_CENTER +
 "================================\n" +
 "         Blessed Day po         \n" +
@@ -1903,7 +1889,6 @@ ESC_ALIGN_CENTER +
 
     await sendToPrinter(singleReceiptText);
 }
-
 
 // ============================================================
 // TARGETED SCREENSHOT FUNCTION

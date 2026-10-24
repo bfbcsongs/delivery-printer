@@ -1861,7 +1861,7 @@ ESC_ALIGN_LEFT +
 "Customer: " + customerName + "\n" +
 "Print Copy #" + currentCount + "\n" +
 "--------------------------------\n" +
-"ITEM    QTY               AMOUNT\n" +
+"ITEM  QTY AMOUNT                \n" +
 "--------------------------------\n" +
 itemLine1   + "\n" +
 itemLine2   + "\n" +

@@ -1,22 +1,4 @@
 // ============================================================
-// EMERGENCY SERVICE WORKER KILLER (PANG-CLEAN NG LUMANG CACHE)
-// ============================================================
-if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.getRegistrations().then(registrations => {
-        for (let registration of registrations) {
-            registration.unregister();
-        }
-    });
-}
-if ('caches' in window) {
-    caches.keys().then(names => {
-        names.forEach(name => {
-            caches.delete(name);
-        });
-    });
-}
-
-// ============================================================
 // DEFAULT CUSTOMER NAMES
 // ============================================================
 const DEFAULT_NAMES = [
@@ -61,7 +43,7 @@ function installApp() {
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=3', {
+        navigator.serviceWorker.register('./sw.js?v=1', {
             scope: './'
         })
         .then(reg => {
@@ -1776,7 +1758,7 @@ async function sendToPrinter(textData) {
 }
 
 // ============================================================
-// PRINT ACTIVE ROW RECEIPT — COMPLETE WITH HARDWARE FEED
+// PRINT ACTIVE ROW RECEIPT
 // ============================================================
 let isPrintingActive = false;
 
@@ -1785,16 +1767,11 @@ async function printActiveRowReceipt() {
     
     if (activeRow) {
         isPrintingActive = true;
-        try {
-            await printRowReceipt(activeRow);
-        } catch (err) {
-            console.error("Print execution error:", err);
-            alert("Print Error: " + err.message);
-        } finally {
-            setTimeout(() => {
-                isPrintingActive = false;
-            }, 1200);
-        }
+        await printRowReceipt(activeRow);
+        
+        setTimeout(() => {
+            isPrintingActive = false;
+        }, 1200);
     } else {
         alert("Pumili muna ng customer bago mag-print!");
     }
@@ -1806,7 +1783,7 @@ async function printRowReceipt(rowNum) {
     const month = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
     const todayDate = `${year}-${month}-${day}`;
-
+    
     const sessionDate = currentSessionDate || todayDate;
     const storageKey = `miki_counter_${sessionDate}_global`;
 
@@ -1815,196 +1792,94 @@ async function printRowReceipt(rowNum) {
     localStorage.setItem(storageKey, currentCount.toString());
 
     saveLedger();
-        
-    // ========================================================
-    // CUSTOMER DATA
-    // ========================================================
+
     const nameInput = document.getElementById(`ledgerName_${rowNum}`);
-    const customerName =
-        (nameInput && nameInput.value.trim())
-            ? nameInput.value.trim()
-            : `Customer ${rowNum}`;
+    const customerName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : `Customer ${rowNum}`;
+    
+    const dry = parseFloat(document.getElementById(`ledgerDry_${rowNum}`).value) || 0;
+    const fresh = parseFloat(document.getElementById(`ledgerFresh_${rowNum}`).value) || 0;
+    const cab = parseFloat(document.getElementById(`ledgerCab_${rowNum}`).value) || 0;
+    const bo = parseFloat(document.getElementById(`ledgerBo_${rowNum}`).value) || 0;
+    const bal = parseFloat(document.getElementById(`ledgerBal_${rowNum}`).value) || 0;
 
-    const dry = parseFloat(
-        document.getElementById(`ledgerDry_${rowNum}`)?.value
-    ) || 0;
+    const priceReg = parseFloat(document.getElementById("priceReg")?.value) || 50;
+    const priceFresh = parseFloat(document.getElementById("priceFresh")?.value) || 50;
+    const priceCab = parseFloat(document.getElementById("priceCab")?.value) || 40;
+    const priceBo = parseFloat(document.getElementById("priceBo")?.value) || 50;
 
-    const fresh = parseFloat(
-        document.getElementById(`ledgerFresh_${rowNum}`)?.value
-    ) || 0;
-
-    const cab = parseFloat(
-        document.getElementById(`ledgerCab_${rowNum}`)?.value
-    ) || 0;
-
-    const bo = parseFloat(
-        document.getElementById(`ledgerBo_${rowNum}`)?.value
-    ) || 0;
-
-    const bal = parseFloat(
-        document.getElementById(`ledgerBal_${rowNum}`)?.value
-    ) || 0;
-
-    // ========================================================
-    // PRICES
-    // ========================================================
-    const priceReg =
-        parseFloat(document.getElementById("priceReg")?.value) || 50;
-
-    const priceFresh =
-        parseFloat(document.getElementById("priceFresh")?.value) || 50;
-
-    const priceCab =
-        parseFloat(document.getElementById("priceCab")?.value) || 40;
-
-    const priceBo =
-        parseFloat(document.getElementById("priceBo")?.value) || 50;
-
-    // ========================================================
-    // CALCULATIONS
-    // ========================================================
     const dryAmt = dry * priceReg;
     const freshAmt = fresh * priceFresh;
     const cabAmt = cab * priceCab;
     const boAmt = (bo / 2) * priceBo;
-
-    const billingStr =
-        document.getElementById(`ledgerBilling_${rowNum}`)
-        ?.value
-        .replace(/,/g, '') || "";
-
+    
+    const billingStr = document.getElementById(`ledgerBilling_${rowNum}`).value.replace(/,/g, '');
     const billing = parseFloat(billingStr) || 0;
-
-    const paymentStr =
-        document.getElementById(`ledgerPay_${rowNum}`)
-        ?.value
-        .replace(/,/g, '') || "";
-
+    
+    const paymentStr = document.getElementById(`ledgerPay_${rowNum}`).value.replace(/,/g, '');
     const payment = parseFloat(paymentStr) || 0;
-
-    const utangStr =
-        document.getElementById(`ledgerRem_${rowNum}`)
-        ?.value
-        .replace(/,/g, '') || "";
-
+    
+    const utangStr = document.getElementById(`ledgerRem_${rowNum}`).value.replace(/,/g, '');
     const utang = parseFloat(utangStr) || 0;
 
     const grandTotal = billing + bal;
 
-    // ========================================================
-    // PRINT LOG
-    // ========================================================
-    recordPrintLog(
-        rowNum,
-        customerName,
-        dry,
-        fresh,
-        cab,
-        bo,
-        bal,
-        billing,
-        payment,
-        utang,
-        currentCount
-    );
+    recordPrintLog(rowNum, customerName, dry, fresh, cab, bo, bal, billing, payment, utang, currentCount);
 
-    // ========================================================
-    // HEADER INFORMATION
-    // ========================================================
-    const dateVal =
-        document.getElementById("displayFileDate")?.innerText || "TODAY";
-
-    const routeName =
-        document.getElementById("displayFileName")?.innerText || "Paul";
+    const dateVal = document.getElementById("displayFileDate") ? document.getElementById("displayFileDate").innerText : "TODAY";
+    const routeName = document.getElementById("displayFileName") ? document.getElementById("displayFileName").innerText : "Paul";
 
     const now = new Date();
+    const timeVal = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
 
-    const timeVal = now.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: true
-    });
-
-    // ========================================================
-    // ESC/POS COMMANDS & STACKED LAYOUT (WRAP-PROOF FOR PT-210)
-    // ========================================================
     const ESC_INIT = "\x1B\x40";
     const ESC_ALIGN_CENTER = "\x1B\x61\x01";
     const ESC_ALIGN_LEFT = "\x1B\x61\x00";
     const ESC_FONT_A = "\x1B\x21\x00";
 
-    const LINE = "----------------------------"; // Safe 28 chars
-    const EQUAL = "============================"; // Safe 28 chars
-
-    function money(value) {
-        return Number(value).toFixed(2);
+    // Helper function para sa pantay na resibo
+    function formatReceiptLine(item, qty, amount) {
+        const itemCol = String(item).padEnd(6, ' ');     
+        const qtyCol = String(qty).padStart(4, ' ');       
+        const amtStr = "P " + Number(amount).toFixed(2);
+        const amtCol = amtStr.padStart(12, ' ');          
+        return itemCol + "  " + qtyCol + "  " + amtCol;    
     }
 
-    function centerText(text, width = 28) {
-        text = String(text);
-        if (text.length >= width) {
-            return text.substring(0, width);
-        }
-        const left = Math.floor((width - text.length) / 2);
-        return " ".repeat(left) + text;
-    }
+    const itemLine1 = formatReceiptLine("DRY", dry, dryAmt);
+    const itemLine2 = formatReceiptLine("FRESH", fresh, freshAmt);
+    const itemLine3 = formatReceiptLine("CAB", cab, cabAmt);
+    const itemLine4 = formatReceiptLine("BO", bo, boAmt);
 
-    const ESC_FEED = "\x1B\x64\x08"; 
-
-    // STACKED FORMAT: Items and summary lines are printed vertically 
-    // so the thermal printer buffer never wraps or breaks columns.
-    const singleReceiptText =
-        ESC_INIT +
-        ESC_FONT_A +
-        ESC_ALIGN_CENTER +
-        EQUAL + "\n" +
-        centerText("Blessed Day po") + "\n" +
-        EQUAL + "\n" +
-        ESC_ALIGN_LEFT +
-        "Date: " + dateVal + "\n" +
-        "Time: " + timeVal + "\n" +
-        "Route: " + routeName + "\n" +
-        "Customer: " + customerName + "\n" +
-        "Print Copy #" + currentCount + "\n" +
-        LINE + "\n" +
-        
-        // Item 1
-        "DRY (" + dry + " x " + priceReg + "):\n" +
-        "  -> P " + money(dryAmt) + "\n" +
-        
-        // Item 2
-        "FRESH (" + fresh + " x " + priceFresh + "):\n" +
-        "  -> P " + money(freshAmt) + "\n" +
-        
-        // Item 3
-        "CAB (" + cab + " x " + priceCab + "):\n" +
-        "  -> P " + money(cabAmt) + "\n" +
-        
-        // Item 4
-        "BO (" + bo + " pcs):\n" +
-        "  -> P " + money(boAmt) + "\n" +
-        
-        LINE + "\n" +
-        
-        // Summary Section (Stacked & Wrap-proof)
-        "BILLING:\n" +
-        "  -> P " + money(billing) + "\n" +
-        "PREV. BALANCE:\n" +
-        "  -> P " + money(bal) + "\n" +
-        LINE + "\n" +
-        "GRAND TOTAL:\n" +
-        "  -> P " + money(grandTotal) + "\n" +
-        "PAYMENT:\n" +
-        "  -> P " + money(payment) + "\n" +
-        LINE + "\n" +
-        "BALANCE (UTANG):\n" +
-        "  -> P " + money(utang) + "\n" +
-        
-        EQUAL + "\n" +
-        ESC_ALIGN_CENTER +
-        centerText("Salamat po sa Pagtangkilik!") + "\n" +
-        EQUAL +
-        ESC_FEED;
+    const singleReceiptText = ESC_INIT + ESC_FONT_A + ESC_ALIGN_CENTER +
+"================================\n" +
+"         Blessed Day po         \n" +
+"================================\n" +
+ESC_ALIGN_LEFT +
+"Date: " + dateVal + "\n" +
+"Time: " + timeVal + "\n" +
+"Route: " + routeName + "\n" +
+"Customer: " + customerName + "\n" +
+"Print Copy #" + currentCount + "\n" +
+"--------------------------------\n" +
+"ITEM      QTY              AMOUNT        AMOUNT\n" +
+"--------------------------------\n" +
+itemLine1  + "\n" +
+itemLine2  + "\n" +
+itemLine3  + "\n" +
+itemLine4  + "\n" +
+"--------------------------------\n" +
+"BILLING:         " + ("P " + billing.toFixed(2)).padStart(16, ' ') + "\n" +
+"PREV. BAL:       " + ("P " + bal.toFixed(2)).padStart(16, ' ') + "\n" +
+"--------------------------------\n" +
+"GRAND TOTAL:     " + ("P " + grandTotal.toFixed(2)).padStart(16, ' ') + "\n" +
+"--------------------------------\n" +
+"Payment:         " + ("P " + payment.toFixed(2)).padStart(16, ' ') + "\n" +
+"--------------------------------\n" +
+"Balance:         " + ("P " + utang.toFixed(2)).padStart(16, ' ') + "\n" +
+"================================\n" +
+ESC_ALIGN_CENTER +
+"  Salamat po sa Pagtangkilik!  \n" +
+"================================\n\n\n\n\n\n";
 
     await sendToPrinter(singleReceiptText);
 }

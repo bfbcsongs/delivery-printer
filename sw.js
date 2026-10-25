@@ -3,7 +3,7 @@ const ASSETS_TO_CACHE = [
   './',
   './index.html',
   './styles.css',
-  './app.js',
+  './script.js', // <-- Pinalitan natin ng tamang filename
   './manifest.json'
 ];
 

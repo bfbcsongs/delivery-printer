@@ -1,4 +1,4 @@
-const CACHE_NAME = 'miki-ledger-v7';
+const CACHE_NAME = 'miki-ledger-v8';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -8,7 +8,6 @@ const ASSETS_TO_CACHE = [
   'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
 ];
 
-// 1. INSTALL
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -18,7 +17,6 @@ self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
 
-// 2. ACTIVATE
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) => {
@@ -34,22 +32,20 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
-// 3. FETCH (Strict Cache-First Strategy para hindi mag-error offline)
 self.addEventListener('fetch', (e) => {
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse;
       }
-      
-      return fetch(e.request).then((networkResponse) => {
-        return networkResponse;
+      return fetch(e.request).then((response) => {
+        return response;
       }).catch(() => {
-        // Kung offline at hindi mahanap ang file, ibigay ang index.html para hindi mag-fail ang app
-        if (e.request.mode === 'navigate' || e.request.destination === 'document') {
+        // Kung offline at navigation request, ibigay ang index.html mula sa cache
+        if (e.request.mode === 'navigate') {
           return caches.match('./index.html');
         }
-        return new Response('', { status: 404, statusText: 'Offline' });
+        return new Response('Offline', { status: 404, statusText: 'Offline' });
       });
     })
   );

@@ -2014,9 +2014,6 @@ async function printRowReceipt(rowNum) {
 
     // Pansamantalang ipalit habang nagte-test ka para hindi masayang ang papel:
     alert(singleReceiptText);
-    
-    // I-comment out muna ito habang nagte-test:
-    // await sendToPrinter(singleReceiptText);
     await sendToPrinter(singleReceiptText);
 }
 

@@ -171,6 +171,15 @@
     color: white;
 }
 </style>
+    <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js', { scope: './' })
+        .then(reg => console.log('SW Registered with scope:', reg.scope))
+        .catch(err => console.error('SW Registration failed:', err));
+    });
+  }
+    </script>
 </head>
 
 <body>

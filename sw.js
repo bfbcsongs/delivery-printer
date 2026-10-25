@@ -1,4 +1,4 @@
-const CACHE_NAME = 'miki-ledger-v6'; // Tinaas sa v6 para i-clear ang lumang offline fallback error
+const CACHE_NAME = 'miki-ledger-v7';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -34,38 +34,22 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
-// 3. FETCH (Offline-First Strategy)
+// 3. FETCH (Strict Cache-First Strategy para hindi mag-error offline)
 self.addEventListener('fetch', (e) => {
-  // Para sa mga navigation requests (tulad ng pag-open o pag-refresh ng app)
-  if (e.request.mode === 'navigate') {
-    e.respondWith(
-      caches.match('./index.html').then((cachedRes) => {
-        return cachedRes || fetch(e.request).catch(() => caches.match('./index.html'));
-      })
-    );
-    return;
-  }
-
-  // Para sa lahat ng iba pang assets (CSS, JS, images, CDN)
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse;
       }
+      
       return fetch(e.request).then((networkResponse) => {
-        if (e.request.method === 'GET' && networkResponse.status === 200) {
-          const responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(e.request, responseClone);
-          });
-        }
         return networkResponse;
       }).catch(() => {
-        // Kung offline at hinahanap ang index.html o root, ibigay ang cached index.html sa halip na error
-        if (e.request.url.includes('index.html') || e.request.url.endsWith('/')) {
+        // Kung offline at hindi mahanap ang file, ibigay ang index.html para hindi mag-fail ang app
+        if (e.request.mode === 'navigate' || e.request.destination === 'document') {
           return caches.match('./index.html');
         }
-        return new Response('', { status: 404, statusText: 'Offline Resource Not Found' });
+        return new Response('', { status: 404, statusText: 'Offline' });
       });
     })
   );

@@ -1925,21 +1925,21 @@ async function printRowReceipt(rowNum) {
     });
 
     // ========================================================
-    // ESC/POS COMMANDS & STRICT 28-CHAR LIMITERS
+    // ESC/POS COMMANDS & STRICT 32-CHAR LAYOUT HELPERS
     // ========================================================
     const ESC_INIT = "\x1B\x40";
     const ESC_ALIGN_CENTER = "\x1B\x61\x01";
     const ESC_ALIGN_LEFT = "\x1B\x61\x00";
     const ESC_FONT_A = "\x1B\x21\x00";
 
-    const LINE = "----------------------------"; // Exactly 28 chars
-    const EQUAL = "============================"; // Exactly 28 chars
+    const LINE = "--------------------------------"; // Exactly 32 chars
+    const EQUAL = "================================"; // Exactly 32 chars
 
     function money(value) {
         return Number(value).toFixed(2);
     }
 
-    function centerText(text, width = 28) {
+    function centerText(text, width = 32) {
         text = String(text);
         if (text.length >= width) {
             return text.substring(0, width);
@@ -1948,16 +1948,18 @@ async function printRowReceipt(rowNum) {
         return " ".repeat(left) + text;
     }
 
+    // Exactly 32 characters total (8 + 4 + 20 = 32)
     function formatItemLine(item, qty, amount) {
-        const itemCol = String(item).padEnd(6, " ");
-        const qtyCol = String(qty).padStart(3, " ");
-        const amountCol = ("P " + money(amount)).padStart(19, " ");
+        const itemCol = String(item).padEnd(8, " ");
+        const qtyCol = String(qty).padStart(4, " ");
+        const amountCol = ("P " + money(amount)).padStart(20, " ");
         return itemCol + qtyCol + amountCol;
     }
 
+    // Guarantees summary lines total exactly 32 characters
     function formatSummaryLine(label, value) {
         const valStr = "P " + money(value);
-        const spaces = 28 - label.length - valStr.length;
+        const spaces = 32 - label.length - valStr.length;
         return label + " ".repeat(Math.max(1, spaces)) + valStr;
     }
 
@@ -1965,6 +1967,9 @@ async function printRowReceipt(rowNum) {
     const itemLine2 = formatItemLine("FRESH", fresh, freshAmt);
     const itemLine3 = formatItemLine("CAB", cab, cabAmt);
     const itemLine4 = formatItemLine("BO", bo, boAmt);
+
+    // Header matching the exact 32-char column widths
+    const itemHeader = "ITEM    " + "QTY " + "          AMOUNT"; // 8 + 4 + 20 = 32
 
     const ESC_FEED = "\x1B\x64\x08"; 
 
@@ -1982,7 +1987,7 @@ async function printRowReceipt(rowNum) {
         "Customer: " + customerName + "\n" +
         "Print Copy #" + currentCount + "\n" +
         LINE + "\n" +
-        "ITEM  QTY         AMOUNT\n" +
+        itemHeader + "\n" +
         LINE + "\n" +
         itemLine1 + "\n" +
         itemLine2 + "\n" +
@@ -2002,8 +2007,9 @@ async function printRowReceipt(rowNum) {
         EQUAL +
         ESC_FEED;
 
+    // Direct automatic print without simulator popup
     await sendToPrinter(singleReceiptText);
-        }
+}
 
 // ============================================================
 // TARGETED SCREENSHOT FUNCTION

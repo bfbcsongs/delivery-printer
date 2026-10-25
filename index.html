@@ -1,19 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, interactive-widget=resizes-content">
+
 <title>Miki Table & Ledger</title>
 
 <link rel="manifest" href="manifest.json">
+
 <meta name="theme-color" content="#111827">
+
 <link rel="stylesheet" href="style.css">
 
-<!-- html2canvas for screenshot feature -->
+
+<!-- =========================================================
+     HTML2CANVAS
+     ========================================================= -->
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
+
 <style>
-/* Custom Dropdown Styling for Name Bar */
+
+/* =========================================================
+   CUSTOM DROPDOWN
+   ========================================================= */
+
 .name-bar-container {
     position: relative;
     flex: 1;
@@ -33,7 +49,9 @@
     background-color: #ffffff;
     border: 1px solid #bfdbfe;
     border-radius: 0 0 6px 6px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.1),
+        0 2px 4px -1px rgba(0, 0, 0, 0.06);
     z-index: 1000;
 }
 
@@ -47,12 +65,17 @@
     text-align: center;
 }
 
-.custom-dropdown-item:active, .custom-dropdown-item:hover {
+.custom-dropdown-item:active,
+.custom-dropdown-item:hover {
     background-color: #eff6ff;
     color: #2563eb;
 }
 
-/* Compact Session Bar & Buttons */
+
+/* =========================================================
+   SESSION BAR
+   ========================================================= */
+
 .session-bar {
     display: flex;
     justify-content: space-between;
@@ -81,7 +104,8 @@
     flex-shrink: 0;
 }
 
-.btn-undo-redo, .session-actions .btn-sm {
+.btn-undo-redo,
+.session-actions .btn-sm {
     padding: 4px 6px;
     font-size: 11px;
     font-weight: bold;
@@ -110,7 +134,11 @@
     background-color: #dc2626;
 }
 
-/* Exit Modal Custom Styling */
+
+/* =========================================================
+   EXIT MODAL
+   ========================================================= */
+
 .exit-modal-overlay {
     display: none;
     position: fixed;
@@ -170,39 +198,62 @@
     background-color: #dc2626;
     color: white;
 }
+
 </style>
-    <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./sw.js', { scope: './' })
-        .then(reg => console.log('SW Registered with scope:', reg.scope))
-        .catch(err => console.error('SW Registration failed:', err));
-    });
-  }
-    </script>
+
 </head>
+
 
 <body>
 
-<!-- EXIT CONFIRMATION MODAL -->
+
+<!-- =========================================================
+     EXIT CONFIRMATION MODAL
+     ========================================================= -->
+
 <div id="exitConfirmModal" class="exit-modal-overlay">
+
     <div class="exit-modal-card">
+
         <h3>Exit Miki Ledger?</h3>
-        <p>Are you sure you want to close or exit the app?</p>
+
+        <p>
+            Are you sure you want to close or exit the app?
+        </p>
+
         <div class="exit-btn-group">
-            <button class="btn-cancel-exit" onclick="cancelExitApp()">Cancel</button>
-            <button class="btn-confirm-exit" onclick="confirmExitApp()">Exit App</button>
+
+            <button
+                class="btn-cancel-exit"
+                onclick="cancelExitApp()">
+                Cancel
+            </button>
+
+            <button
+                class="btn-confirm-exit"
+                onclick="confirmExitApp()">
+                Exit App
+            </button>
+
         </div>
+
     </div>
+
 </div>
 
-<!-- DYNAMIC SETUP / CONFIRMATION MODAL -->
+
+<!-- =========================================================
+     SETUP / CONFIRMATION MODAL
+     ========================================================= -->
+
 <div id="setupModal" class="setup-modal-overlay">
+
     <div class="setup-modal">
 
-        <button class="modal-close-btn"
-                onclick="closeSetupModal()"
-                title="Close">
+        <button
+            class="modal-close-btn"
+            onclick="closeSetupModal()"
+            title="Close">
             &times;
         </button>
 
@@ -210,371 +261,1076 @@
             Start New Ledger File
         </h3>
 
-        <p id="modalSubtext"
-           style="font-size:12px;color:#6b7280;">
-            System date is automatically set to today. Please enter Salesman/Route name.
+        <p
+            id="modalSubtext"
+            style="font-size:12px;color:#6b7280;">
+            System date is automatically set to today.
+            Please enter Salesman/Route name.
         </p>
 
         <label for="modalNameInput">
             Route / Salesman Name
         </label>
 
-        <input type="text"
-               id="modalNameInput"
-               placeholder="Enter Salesman / Route">
+        <input
+            type="text"
+            id="modalNameInput"
+            placeholder="Enter Salesman / Route">
 
-        <button id="modalActionBtn"
-                class="setup-btn"
-                onclick="handleModalSubmit()">
+        <button
+            id="modalActionBtn"
+            class="setup-btn"
+            onclick="handleModalSubmit()">
             Open Ledger
         </button>
 
     </div>
+
 </div>
 
 
 <div class="main-wrapper">
 
-    <!-- =========================================================
-         FIRST TABLE
-         ========================================================= -->
 
-    <div class="table-box">
+<!-- =========================================================
+     FIRST TABLE
+     ========================================================= -->
 
-        <table>
+<div class="table-box">
 
-            <thead>
+<table>
 
-                <tr>
+<thead>
 
-                    <th>Item</th>
-                    <th>Qty</th>
-                    <th id="priceLockHeader"
-                        class="lockable-header"
-                        onclick="handlePriceKeyClick()"
-                        title="Tap 5 times to Lock/Unlock Prices">
-                        Price 🔒
-                    </th>
-                    <th>Amount</th>
+<tr>
 
-                </tr>
+<th>Item</th>
 
-            </thead>
+<th>Qty</th>
 
+<th
+    id="priceLockHeader"
+    class="lockable-header"
+    onclick="handlePriceKeyClick()"
+    title="Tap 5 times to Lock/Unlock Prices">
+    Price 🔒
+</th>
 
-            <tbody>
+<th>Amount</th>
 
-                <tr>
-                    <td class="miki">DRY</td>
-                    <td>
-                        <input type="number" id="qtyReg" min="0" step="any" inputmode="decimal" oninput="syncFromTable('Reg')">
-                    </td>
-                    <td>
-                        <input type="number" id="priceReg" class="price-input" min="0" step="any" value="50" oninput="calculateMain()" readonly style="background-color:#e5e7eb;">
-                    </td>
-                    <td class="amount" id="amountReg">0</td>
-                </tr>
+</tr>
+
+</thead>
 
 
-                <tr>
-                    <td class="miki">FRESH</td>
-                    <td>
-                        <input type="number" id="qtyFresh" min="0" step="any" inputmode="decimal" oninput="syncFromTable('Fresh')">
-                    </td>
-                    <td>
-                        <input type="number" id="priceFresh" class="price-input" min="0" step="any" value="50" oninput="calculateMain()" readonly style="background-color:#e5e7eb;">
-                    </td>
-                    <td class="amount" id="amountFresh">0</td>
-                </tr>
+<tbody>
 
 
-                <tr>
-                    <td class="miki">CAB</td>
-                    <td>
-                        <input type="number" id="qtyCab" min="0" step="any" inputmode="decimal" oninput="syncFromTable('Cab')">
-                    </td>
-                    <td>
-                        <input type="number" id="priceCab" class="price-input" min="0" step="any" value="40" oninput="calculateMain()" readonly style="background-color:#e5e7eb;">
-                    </td>
-                    <td class="amount" id="amountCab">0</td>
-                </tr>
+<tr>
+
+<td class="miki">
+    DRY
+</td>
+
+<td>
+    <input
+        type="number"
+        id="qtyReg"
+        min="0"
+        step="any"
+        inputmode="decimal"
+        oninput="syncFromTable('Reg')">
+</td>
+
+<td>
+
+    <input
+        type="number"
+        id="priceReg"
+        class="price-input"
+        min="0"
+        step="any"
+        value="50"
+        oninput="calculateMain()"
+        readonly
+        style="background-color:#e5e7eb;">
+
+</td>
+
+<td
+    class="amount"
+    id="amountReg">
+    0
+</td>
+
+</tr>
 
 
-                <tr>
-                    <td class="miki">BO</td>
-                    <td>
-                        <input type="number" id="qtyBo" min="0" step="any" inputmode="decimal" oninput="syncFromTable('BO')">
-                    </td>
-                    <td>
-                        <input type="number" id="priceBo" class="price-input" min="0" step="any" value="50" oninput="calculateMain()" readonly style="background-color:#e5e7eb;">
-                    </td>
-                    <td class="amount" id="amountBo">0</td>
-                </tr>
+<tr>
+
+<td class="miki">
+    FRESH
+</td>
+
+<td>
+    <input
+        type="number"
+        id="qtyFresh"
+        min="0"
+        step="any"
+        inputmode="decimal"
+        oninput="syncFromTable('Fresh')">
+</td>
+
+<td>
+
+    <input
+        type="number"
+        id="priceFresh"
+        class="price-input"
+        min="0"
+        step="any"
+        value="50"
+        oninput="calculateMain()"
+        readonly
+        style="background-color:#e5e7eb;">
+
+</td>
+
+<td
+    class="amount"
+    id="amountFresh">
+    0
+</td>
+
+</tr>
 
 
-                <tr>
-                    <td class="miki">TOTAL</td>
-                    <td></td>
-                    <td></td>
-                    <td class="amount" id="totalAmount">0</td>
-                </tr>
+<tr>
+
+<td class="miki">
+    CAB
+</td>
+
+<td>
+    <input
+        type="number"
+        id="qtyCab"
+        min="0"
+        step="any"
+        inputmode="decimal"
+        oninput="syncFromTable('Cab')">
+</td>
+
+<td>
+
+    <input
+        type="number"
+        id="priceCab"
+        class="price-input"
+        min="0"
+        step="any"
+        value="40"
+        oninput="calculateMain()"
+        readonly
+        style="background-color:#e5e7eb;">
+
+</td>
+
+<td
+    class="amount"
+    id="amountCab">
+    0
+</td>
+
+</tr>
 
 
-                <tr>
-                    <td colspan="2" rowspan="2" style="padding: 0; vertical-align: middle; background-color: #eff6ff;">
-                        <div style="display: flex; height: 100%; min-height: 70px; align-items: center; border: 1px solid #bfdbfe;">
-                            
-                            <!-- Active Customer Name Input with Custom Dropdown -->
-                            <div class="name-bar-container">
-                                <input type="text" 
-                                       id="activeCustomerInput" 
-                                       placeholder="Enter Name"
-                                       autocomplete="off"
-                                       onfocus="showNameDropdown()"
-                                       oninput="handleActiveCustomerNameChange(this.value); filterNameDropdown(this.value);"
-                                       style="flex: 1; font-size: 18px; font-weight: bold; color: #1d4ed8; text-align: center; border: none; background: transparent; width: 100%;">
-                                <div id="customNameDropdown" class="custom-dropdown-list"></div>
-                            </div>
-                            
-                            <button id="mainPrintBtn" type="button" onclick="printActiveRowReceipt()" style="flex: 1; height: 100%; min-height: 70px; background-color: #2563eb; color: white; font-size: 18px; font-weight: bold; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: inset 0 0 5px rgba(0,0,0,0.2);">
-                                🛈 PRINT
-                            </button>
+<tr>
 
-                        </div>
-                    </td>
+<td class="miki">
+    BO
+</td>
 
-                    <td class="label-cell">Balance</td>
-                    <td>
-                        <input type="number" id="inputBal" min="0" step="any" inputmode="decimal" class="direct-amount-input" oninput="calculateMain()">
-                    </td>
-                </tr>
+<td>
+    <input
+        type="number"
+        id="qtyBo"
+        min="0"
+        step="any"
+        inputmode="decimal"
+        oninput="syncFromTable('BO')">
+</td>
 
+<td>
 
-                <tr>
-                    <td class="label-cell">Payment</td>
-                    <td>
-                        <input type="number" id="inputPay" min="0" step="any" inputmode="decimal" class="direct-amount-input" oninput="calculateMain()">
-                    </td>
-                </tr>
+    <input
+        type="number"
+        id="priceBo"
+        class="price-input"
+        min="0"
+        step="any"
+        value="50"
+        oninput="calculateMain()"
+        readonly
+        style="background-color:#e5e7eb;">
 
+</td>
 
-                <tr>
-                    <td style="font-size:10px; font-weight:900; color:#008cff; text-align:center;">Proverbs 11:3</td>
-                    <td style="font-size:10px; font-weight:900; color:#008cff; text-align:center;">Luke 16:10</td>
-                    <td class="miki-net-total-large">NET TOTAL</td>
-                    <td class="net-total-large" id="netTotalAmount">0</td>
-                </tr>
+<td
+    class="amount"
+    id="amountBo">
+    0
+</td>
 
-            </tbody>
-
-        </table>
+</tr>
 
 
-        <div class="sync-panel">
+<tr>
 
-            <div class="sync-cell">
-                <label>Dry</label>
-                <input type="number" id="syncDry" min="0" step="any" inputmode="decimal" oninput="syncFromPanel('Dry')">
-            </div>
+<td class="miki">
+    TOTAL
+</td>
 
-            <div class="sync-cell">
-                <label>Fresh</label>
-                <input type="number" id="syncFresh" min="0" step="any" inputmode="decimal" oninput="syncFromPanel('Fresh')">
-            </div>
+<td></td>
 
-            <div class="sync-cell">
-                <label>Cab</label>
-                <input type="number" id="syncCab" min="0" step="any" inputmode="decimal" oninput="syncFromPanel('Cab')">
-            </div>
+<td></td>
 
-            <div class="sync-cell">
-                <label>BO</label>
-                <input type="number" id="syncBo" min="0" step="any" inputmode="decimal" oninput="syncFromPanel('BO')">
-            </div>
+<td
+    class="amount"
+    id="totalAmount">
+    0
+</td>
 
-            <div class="btn-container">
-                <button id="connectPrinterBtn" class="action-btn" onclick="connectBluetoothPrinter()" style="background-color: #059669; color: white; font-weight: bold;">
-                    PAIR PRINTER
-                </button>
-                <button id="installBtn" class="action-btn install-btn" onclick="installApp()">INSTALL</button>
-                <button class="action-btn clear-btn" onclick="clearMainInputs()">CLEAR</button>
-            </div>
+</tr>
 
-        </div>
 
-    </div>
+<tr>
 
-    <!-- =========================================================
-         ACTIVE FILE BAR (COMPACT NAME, DATE & ACTIONS BAR)
-         ========================================================= -->
-    <div class="session-bar">
+<td
+    colspan="2"
+    rowspan="2"
+    style="
+        padding:0;
+        vertical-align:middle;
+        background-color:#eff6ff;
+    ">
 
-        <div class="session-info">
-            <div class="date-foreground">
-                <span id="displayFileDate">--</span>
-                <span class="weekday-display" id="displayFileDay">---</span>
-                <span id="displayFileName">--</span>
-            </div>
-        </div>
+<div
+    style="
+        display:flex;
+        height:100%;
+        min-height:70px;
+        align-items:center;
+        border:1px solid #bfdbfe;
+    ">
 
-        <div class="session-actions">
-            <button id="undoBtn" class="btn-undo-redo" onclick="undo()" title="Undo" disabled>↺</button>
-            <button id="redoBtn" class="btn-undo-redo" onclick="redo()" title="Redo" disabled>↻</button>
-            <button class="btn-sm save-btn" onclick="openSaveConfirmationModal()">Save</button>
-            <button class="btn-sm" onclick="takeScreenshot()" style="background-color: #8b5cf6;" title="Camera">Cam</button>
-            <button class="btn-sm clear-btn" onclick="promptNewFile()">New</button>
-        </div>
 
-    </div>
+<div class="name-bar-container">
+
+<input
+    type="text"
+    id="activeCustomerInput"
+    placeholder="Enter Name"
+    autocomplete="off"
+    onfocus="showNameDropdown()"
+    oninput="
+        handleActiveCustomerNameChange(this.value);
+        filterNameDropdown(this.value);
+    "
+    style="
+        flex:1;
+        font-size:18px;
+        font-weight:bold;
+        color:#1d4ed8;
+        text-align:center;
+        border:none;
+        background:transparent;
+        width:100%;
+    ">
+
+<div
+    id="customNameDropdown"
+    class="custom-dropdown-list">
+</div>
+
+</div>
+
+
+<button
+    id="mainPrintBtn"
+    type="button"
+    onclick="printActiveRowReceipt()"
+    style="
+        flex:1;
+        height:100%;
+        min-height:70px;
+        background-color:#2563eb;
+        color:white;
+        font-size:18px;
+        font-weight:bold;
+        border:none;
+        cursor:pointer;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        box-shadow:inset 0 0 5px rgba(0,0,0,0.2);
+    ">
+    🛈 PRINT
+</button>
+
+
+</div>
+
+</td>
+
+
+<td class="label-cell">
+    Balance
+</td>
+
+<td>
+
+<input
+    type="number"
+    id="inputBal"
+    min="0"
+    step="any"
+    inputmode="decimal"
+    class="direct-amount-input"
+    oninput="calculateMain()">
+
+</td>
+
+</tr>
+
+
+<tr>
+
+<td class="label-cell">
+    Payment
+</td>
+
+<td>
+
+<input
+    type="number"
+    id="inputPay"
+    min="0"
+    step="any"
+    inputmode="decimal"
+    class="direct-amount-input"
+    oninput="calculateMain()">
+
+</td>
+
+</tr>
+
+
+<tr>
+
+<td
+    style="
+        font-size:10px;
+        font-weight:900;
+        color:#008cff;
+        text-align:center;
+    ">
+    Proverbs 11:3
+</td>
+
+<td
+    style="
+        font-size:10px;
+        font-weight:900;
+        color:#008cff;
+        text-align:center;
+    ">
+    Luke 16:10
+</td>
+
+<td class="miki-net-total-large">
+    NET TOTAL
+</td>
+
+<td
+    class="net-total-large"
+    id="netTotalAmount">
+    0
+</td>
+
+</tr>
+
+
+</tbody>
+
+</table>
+
+
+<div class="sync-panel">
+
+
+<div class="sync-cell">
+
+<label>
+    Dry
+</label>
+
+<input
+    type="number"
+    id="syncDry"
+    min="0"
+    step="any"
+    inputmode="decimal"
+    oninput="syncFromPanel('Dry')">
+
+</div>
+
+
+<div class="sync-cell">
+
+<label>
+    Fresh
+</label>
+
+<input
+    type="number"
+    id="syncFresh"
+    min="0"
+    step="any"
+    inputmode="decimal"
+    oninput="syncFromPanel('Fresh')">
+
+</div>
+
+
+<div class="sync-cell">
+
+<label>
+    Cab
+</label>
+
+<input
+    type="number"
+    id="syncCab"
+    min="0"
+    step="any"
+    inputmode="decimal"
+    oninput="syncFromPanel('Cab')">
+
+</div>
+
+
+<div class="sync-cell">
+
+<label>
+    BO
+</label>
+
+<input
+    type="number"
+    id="syncBo"
+    min="0"
+    step="any"
+    inputmode="decimal"
+    oninput="syncFromPanel('BO')">
+
+</div>
+
+
+<div class="btn-container">
+
+
+<button
+    id="connectPrinterBtn"
+    class="action-btn"
+    onclick="connectBluetoothPrinter()"
+    style="
+        background-color:#059669;
+        color:white;
+        font-weight:bold;
+    ">
+    PAIR PRINTER
+</button>
+
+
+<button
+    id="installBtn"
+    class="action-btn install-btn"
+    onclick="installApp()">
+    INSTALL
+</button>
+
+
+<button
+    class="action-btn clear-btn"
+    onclick="clearMainInputs()">
+    CLEAR
+</button>
+
+
+</div>
+
+</div>
+
+</div>
 
 
 <!-- =========================================================
-     SECOND TABLE / CUSTOMER LIST (DYNAMIC ROWS)
+     SESSION BAR
      ========================================================= -->
-<div class="table-box table-box-2 customer-list-watermark">
 
-    <div class="customer-day-watermark" id="customerDayWatermark">
-        --
-    </div>
+<div class="session-bar">
 
-    <!-- Scrollable Table Container -->
-    <div class="table-scroll-container">
-        <table>
+<div class="session-info">
+
+<div class="date-foreground">
+
+<span id="displayFileDate">
+    --
+</span>
+
+<span
+    class="weekday-display"
+    id="displayFileDay">
+    ---
+</span>
+
+<span id="displayFileName">
+    --
+</span>
+
+</div>
+
+</div>
+
+
+<div class="session-actions">
+
+<button
+    id="undoBtn"
+    class="btn-undo-redo"
+    onclick="undo()"
+    title="Undo"
+    disabled>
+    ↺
+</button>
+
+<button
+    id="redoBtn"
+    class="btn-undo-redo"
+    onclick="redo()"
+    title="Redo"
+    disabled>
+    ↻
+</button>
+
+<button
+    class="btn-sm save-btn"
+    onclick="openSaveConfirmationModal()">
+    Save
+</button>
+
+<button
+    class="btn-sm"
+    onclick="takeScreenshot()"
+    style="background-color:#8b5cf6;"
+    title="Camera">
+    Cam
+</button>
+
+<button
+    class="btn-sm clear-btn"
+    onclick="promptNewFile()">
+    New
+</button>
+
+</div>
+
+</div>
+
+
+<!-- =========================================================
+     SECOND TABLE
+     ========================================================= -->
+
+<div
+    class="table-box table-box-2 customer-list-watermark">
+
+<div
+    class="customer-day-watermark"
+    id="customerDayWatermark">
+    --
+</div>
+
+
+<div class="table-scroll-container">
+
+<table>
+
 
 <colgroup>
-    <col style="width:14%;"> <!-- Name -->
-    <col style="width:9%;">  <!-- Dry -->
-    <col style="width:9%;">  <!-- Fresh -->
-    <col style="width:9%;">  <!-- Cab -->
-    <col style="width:9%;">  <!-- BO -->
-    <col style="width:12%;"> <!-- Bal -->
-    <col style="width:13%;"> <!-- Billing -->
-    <col style="width:13%;"> <!-- Coll'n -->
-    <col style="width:12%;"> <!-- Utang -->
+
+<col style="width:14%;">
+<col style="width:9%;">
+<col style="width:9%;">
+<col style="width:9%;">
+<col style="width:9%;">
+<col style="width:12%;">
+<col style="width:13%;">
+<col style="width:13%;">
+<col style="width:12%;">
+
 </colgroup>
 
 
-            <thead>
-                <tr>
-                    <th id="lockHeader" class="lockable-header" onclick="handleKeyClick()" title="Tap 5 times to Lock/Unlock">🔒</th>
-                    <th>Dry</th>
-                    <th>Fresh</th>
-                    <th>Cab</th>
-                    <th>BO</th>
-                    <th>Bal</th>
-                    <th>Billing</th>
-                    <th class="colln-header">Coll'n</th>
-                    <th>Utang</th>
-                </tr>
-            </thead>
+<thead>
 
-            <tbody id="customerTableBody">
-                <!-- Dynamically populated via script.js -->
-            </tbody>
+<tr>
 
-        </table>
-    </div>
+<th
+    id="lockHeader"
+    class="lockable-header"
+    onclick="handleKeyClick()"
+    title="Tap 5 times to Lock/Unlock">
+    🔒
+</th>
+
+<th>
+    Dry
+</th>
+
+<th>
+    Fresh
+</th>
+
+<th>
+    Cab
+</th>
+
+<th>
+    BO
+</th>
+
+<th>
+    Bal
+</th>
+
+<th>
+    Billing
+</th>
+
+<th class="colln-header">
+    Coll'n
+</th>
+
+<th>
+    Utang
+</th>
+
+</tr>
+
+</thead>
+
+
+<tbody id="customerTableBody">
+</tbody>
+
+
+</table>
+
+</div>
 
 </div>
 
 
-    <!-- =========================================================
-         THIRD TABLE
-         ========================================================= -->
-    <div class="table-box table-box-3">
-        <table>
-            <colgroup>
-                <col style="width:20%;">
-                <col style="width:15%;">
-                <col style="width:20%;">
-                <col style="width:15%;">
-                <col style="width:30%;">
-            </colgroup>
-            <tbody>
-                <tr>
-                    <th>ITEMS</th>
-                    <th>AMOUNT</th>
-                    <th>ITEMS</th>
-                    <th>AMOUNT</th>
-                    <td rowspan="2" class="third-summary-cell collection-summary-cell">
-                        <div class="summary-label">Collection - Expenses</div>
-                        <div id="collectionPlusExtra">0</div>
-                    </td>
-                </tr>
-                <tr>
-                    <td><input type="text" id="extraItem_1" class="extra-item-input" oninput="calculateExtraTable(); saveLedger();"></td>
-                    <td><input type="number" id="extraAmount_1" class="extra-amount-input" min="0" step="any" inputmode="decimal" oninput="calculateExtraTable(); saveLedger();"></td>
-                    <td><input type="text" id="extraItem_2" class="extra-item-input" oninput="calculateExtraTable(); saveLedger();"></td>
-                    <td><input type="number" id="extraAmount_2" class="extra-amount-input" min="0" step="any" inputmode="decimal" oninput="calculateExtraTable(); saveLedger();"></td>
-                </tr>
-                <tr>
-                    <td><input type="text" id="extraItem_3" class="extra-item-input" oninput="calculateExtraTable(); saveLedger();"></td>
-                    <td><input type="number" id="extraAmount_3" class="extra-amount-input" min="0" step="any" inputmode="decimal" oninput="calculateExtraTable(); saveLedger();"></td>
-                    <td><input type="text" id="extraItem_4" class="extra-item-input" oninput="calculateExtraTable(); saveLedger();"></td>
-                    <td><input type="number" id="extraAmount_4" class="extra-amount-input" min="0" step="any" inputmode="decimal" oninput="calculateExtraTable(); saveLedger();"></td>
-                    <td rowspan="2" class="third-summary-cell coh-cell">
-                        <div class="summary-label">COH</div>
-                        <input type="number" id="inputCOH" min="0" step="any" inputmode="decimal" value="0" oninput="calculateExtraTable(); saveLedger();">
-                    </td>
-                </tr>
-                <tr>
-                    <td><input type="text" id="extraItem_5" class="extra-item-input" oninput="calculateExtraTable(); saveLedger();"></td>
-                    <td><input type="number" id="extraAmount_5" class="extra-amount-input" min="0" step="any" inputmode="decimal" oninput="calculateExtraTable(); saveLedger();"></td>
-                    <td><input type="text" id="extraItem_6" class="extra-item-input" oninput="calculateExtraTable(); saveLedger();"></td>
-                    <td><input type="number" id="extraAmount_6" class="extra-amount-input" min="0" step="any" inputmode="decimal" oninput="calculateExtraTable(); saveLedger();"></td>
-                </tr>
-                <tr>
-                    <td><input type="text" id="extraItem_7" class="extra-item-input" oninput="calculateExtraTable(); saveLedger();"></td>
-                    <td><input type="number" id="extraAmount_7" class="extra-amount-input" min="0" step="any" inputmode="decimal" oninput="calculateExtraTable(); saveLedger();"></td>
-                    <td><input type="text" id="extraItem_8" class="extra-item-input" oninput="calculateExtraTable(); saveLedger();"></td>
-                    <td><input type="number" id="extraAmount_8" class="extra-amount-input" min="0" step="any" inputmode="decimal" oninput="calculateExtraTable(); saveLedger();"></td>
-                    <td rowspan="2" class="third-summary-cell grand-total-cell">
-                        <div class="summary-label">GRAND TOTAL</div>
-                        <div id="grandTotalAmount">0</div>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="extra-total-label">TOTAL</td>
-                    <td class="extra-total-amount" id="extraColumn2Total">0</td>
-                    <td class="extra-total-label">TOTAL</td>
-                    <td class="extra-total-amount" id="extraColumn4Total">0</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
+<!-- =========================================================
+     THIRD TABLE
+     ========================================================= -->
+
+<div class="table-box table-box-3">
+
+<table>
+
+<colgroup>
+
+<col style="width:20%;">
+<col style="width:15%;">
+<col style="width:20%;">
+<col style="width:15%;">
+<col style="width:30%;">
+
+</colgroup>
 
 
-    <!-- =========================================================
-         NOTE BAR
-         ========================================================= -->
-    <div id="newTableNoteBar" class="note-bar">
-        <input type="text" id="newTableNote" placeholder="NOTE" autocomplete="off" oninput="saveLedger();">
-    </div>
+<tbody>
 
-    <!-- =========================================================
-         LONG PRESS VIEW SWITCHER BUTTON
-         ========================================================= -->
-    <div class="switch-container" style="text-align: center; margin: 10px 0;">
-        <button id="viewToggleBtn" class="btn-toggle-view" style="background-color: #2563eb;">
-            📋 VIEW: CUSTOMERS TABLE (Hold 3s to Switch)
-        </button>
-    </div>
 
-    <!-- =========================================================
-         30-DAY HISTORY ARCHIVE
-         ========================================================= -->
-    <div class="history-section" id="savedFilesSection">
-        <div class="history-title">
-            <span>Saved Files</span>
-            <span id="historyCount" style="font-weight:normal; color:#6b7280; font-size:11px;">0 / 30</span>
-        </div>
-        <div class="history-list" id="historyContainer">
-            <p style="color:#9ca3af; text-align:center; margin:10px 0;">No saved files yet.</p>
-        </div>
-    </div>
+<tr>
+
+<th>
+    ITEMS
+</th>
+
+<th>
+    AMOUNT
+</th>
+
+<th>
+    ITEMS
+</th>
+
+<th>
+    AMOUNT
+</th>
+
+<td
+    rowspan="2"
+    class="third-summary-cell collection-summary-cell">
+
+<div class="summary-label">
+    Collection - Expenses
+</div>
+
+<div id="collectionPlusExtra">
+    0
+</div>
+
+</td>
+
+</tr>
+
+
+<tr>
+
+<td>
+<input
+    type="text"
+    id="extraItem_1"
+    class="extra-item-input"
+    oninput="calculateExtraTable(); saveLedger();">
+</td>
+
+<td>
+<input
+    type="number"
+    id="extraAmount_1"
+    class="extra-amount-input"
+    min="0"
+    step="any"
+    inputmode="decimal"
+    oninput="calculateExtraTable(); saveLedger();">
+</td>
+
+<td>
+<input
+    type="text"
+    id="extraItem_2"
+    class="extra-item-input"
+    oninput="calculateExtraTable(); saveLedger();">
+</td>
+
+<td>
+<input
+    type="number"
+    id="extraAmount_2"
+    class="extra-amount-input"
+    min="0"
+    step="any"
+    inputmode="decimal"
+    oninput="calculateExtraTable(); saveLedger();">
+</td>
+
+</tr>
+
+
+<tr>
+
+<td>
+<input
+    type="text"
+    id="extraItem_3"
+    class="extra-item-input"
+    oninput="calculateExtraTable(); saveLedger();">
+</td>
+
+<td>
+<input
+    type="number"
+    id="extraAmount_3"
+    class="extra-amount-input"
+    min="0"
+    step="any"
+    inputmode="decimal"
+    oninput="calculateExtraTable(); saveLedger();">
+</td>
+
+<td>
+<input
+    type="text"
+    id="extraItem_4"
+    class="extra-item-input"
+    oninput="calculateExtraTable(); saveLedger();">
+</td>
+
+<td>
+<input
+    type="number"
+    id="extraAmount_4"
+    class="extra-amount-input"
+    min="0"
+    step="any"
+    inputmode="decimal"
+    oninput="calculateExtraTable(); saveLedger();">
+</td>
+
+<td
+    rowspan="2"
+    class="third-summary-cell coh-cell">
+
+<div class="summary-label">
+    COH
+</div>
+
+<input
+    type="number"
+    id="inputCOH"
+    min="0"
+    step="any"
+    inputmode="decimal"
+    value="0"
+    oninput="calculateExtraTable(); saveLedger();">
+
+</td>
+
+</tr>
+
+
+<tr>
+
+<td>
+<input
+    type="text"
+    id="extraItem_5"
+    class="extra-item-input"
+    oninput="calculateExtraTable(); saveLedger();">
+</td>
+
+<td>
+<input
+    type="number"
+    id="extraAmount_5"
+    class="extra-amount-input"
+    min="0"
+    step="any"
+    inputmode="decimal"
+    oninput="calculateExtraTable(); saveLedger();">
+</td>
+
+<td>
+<input
+    type="text"
+    id="extraItem_6"
+    class="extra-item-input"
+    oninput="calculateExtraTable(); saveLedger();">
+</td>
+
+<td>
+<input
+    type="number"
+    id="extraAmount_6"
+    class="extra-amount-input"
+    min="0"
+    step="any"
+    inputmode="decimal"
+    oninput="calculateExtraTable(); saveLedger();">
+</td>
+
+</tr>
+
+
+<tr>
+
+<td>
+<input
+    type="text"
+    id="extraItem_7"
+    class="extra-item-input"
+    oninput="calculateExtraTable(); saveLedger();">
+</td>
+
+<td>
+<input
+    type="number"
+    id="extraAmount_7"
+    class="extra-amount-input"
+    min="0"
+    step="any"
+    inputmode="decimal"
+    oninput="calculateExtraTable(); saveLedger();">
+</td>
+
+<td>
+<input
+    type="text"
+    id="extraItem_8"
+    class="extra-item-input"
+    oninput="calculateExtraTable(); saveLedger();">
+</td>
+
+<td>
+<input
+    type="number"
+    id="extraAmount_8"
+    class="extra-amount-input"
+    min="0"
+    step="any"
+    inputmode="decimal"
+    oninput="calculateExtraTable(); saveLedger();">
+</td>
+
+<td
+    rowspan="2"
+    class="third-summary-cell grand-total-cell">
+
+<div class="summary-label">
+    GRAND TOTAL
+</div>
+
+<div id="grandTotalAmount">
+    0
+</div>
+
+</td>
+
+</tr>
+
+
+<tr>
+
+<td class="extra-total-label">
+    TOTAL
+</td>
+
+<td
+    class="extra-total-amount"
+    id="extraColumn2Total">
+    0
+</td>
+
+<td class="extra-total-label">
+    TOTAL
+</td>
+
+<td
+    class="extra-total-amount"
+    id="extraColumn4Total">
+    0
+</td>
+
+</tr>
+
+
+</tbody>
+
+</table>
 
 </div>
+
+
+<!-- =========================================================
+     NOTE BAR
+     ========================================================= -->
+
+<div
+    id="newTableNoteBar"
+    class="note-bar">
+
+<input
+    type="text"
+    id="newTableNote"
+    placeholder="NOTE"
+    autocomplete="off"
+    oninput="saveLedger();">
+
+</div>
+
+
+<!-- =========================================================
+     VIEW SWITCHER
+     ========================================================= -->
+
+<div
+    class="switch-container"
+    style="text-align:center;margin:10px 0;">
+
+<button
+    id="viewToggleBtn"
+    class="btn-toggle-view"
+    style="background-color:#2563eb;">
+
+    📋 VIEW: CUSTOMERS TABLE
+    (Hold 3s to Switch)
+
+</button>
+
+</div>
+
+
+<!-- =========================================================
+     HISTORY
+     ========================================================= -->
+
+<div
+    class="history-section"
+    id="savedFilesSection">
+
+<div class="history-title">
+
+<span>
+    Saved Files
+</span>
+
+<span
+    id="historyCount"
+    style="
+        font-weight:normal;
+        color:#6b7280;
+        font-size:11px;
+    ">
+    0 / 30
+</span>
+
+</div>
+
+
+<div
+    class="history-list"
+    id="historyContainer">
+
+<p
+    style="
+        color:#9ca3af;
+        text-align:center;
+        margin:10px 0;
+    ">
+    No saved files yet.
+</p>
+
+</div>
+
+</div>
+
+
+</div>
+
+
+<!-- =========================================================
+     MAIN SCRIPT
+     ========================================================= -->
 
 <script src="script.js"></script>
+
 </body>
+
 </html>

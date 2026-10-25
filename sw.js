@@ -1,10 +1,11 @@
-const CACHE_NAME = 'miki-ledger-v4'; // Tinaas natin sa v4 para mag-update
+const CACHE_NAME = 'miki-ledger-v5'; // Tinaas natin sa v5 para sa kumpletong offline support at html2canvas cache
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
-  './styles.css', // <-- Eto ang idinagdag natin para sumama ang disenyo!
+  './styles.css',
   './script.js',
-  './manifest.json'
+  './manifest.json',
+  'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'
 ];
 
 // 1. INSTALL
@@ -45,8 +46,20 @@ self.addEventListener('fetch', (e) => {
   }
 
   e.respondWith(
-    caches.match(e.request).then((res) => {
-      return res || fetch(e.request).catch(() => {
+    caches.match(e.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
+      return fetch(e.request).then((networkResponse) => {
+        // Dynamic runtime caching para sa iba pang requests kung kinakailangan
+        if (e.request.method === 'GET' && networkResponse.status === 200) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(e.request, responseClone);
+          });
+        }
+        return networkResponse;
+      }).catch(() => {
         return new Response('', { status: 404, statusText: 'Offline' });
       });
     })

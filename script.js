@@ -1970,11 +1970,6 @@ async function printRowReceipt(rowNum) {
     const paymentText = "P " + money(payment);
     const utangText = "P " + money(utang);
 
-    // ========================================================
-    // HARDWARE FEED COMMAND PARA SA BOTTOM MARGIN
-    // (Palitan ang 08 kung gusto mo pang habaan o iklian: 
-    // halimbawa \x1B\x64\x0A para sa mas mahabang espasyo)
-    // ========================================================
     const ESC_FEED = "\x1B\x64\x08"; 
 
     const singleReceiptText =
@@ -2001,19 +1996,17 @@ async function printRowReceipt(rowNum) {
         "BILLING:     " + billingText.padStart(17, " ") + "\n" +
         "PREV. BAL:   " + balText.padStart(17, " ") + "\n" +
         LINE + "\n" +
-        
+        "GRAND TOTAL: " + grandText.padStart(17, " ") + "\n" +
         "Payment:     " + paymentText.padStart(17, " ") + "\n" +
         LINE + "\n" +
         "Balance:     " + utangText.padStart(17, " ") + "\n" +
-
         EQUAL + "\n" +
         ESC_ALIGN_CENTER +
         centerText("Salamat po sa Pagtangkilik!") + "\n" +
         EQUAL +
-        ESC_FEED; // <-- ETO ANG NASA PINAKADULO NG TEXT BAGO IPADALA SA PRINTER
+        ESC_FEED;
 
-    // Pansamantalang ipalit habang nagte-test ka para hindi masayang ang papel:
-    alert(singleReceiptText);
+    // Direct print without simulator alert
     await sendToPrinter(singleReceiptText);
 }
 

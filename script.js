@@ -1985,28 +1985,6 @@ async function printRowReceipt(rowNum) {
         itemLine2 + "\n" +
         itemLine3 + "\n" +
         itemLine4 + "\n";
-
-    // ========================================================
-    // TABLE 2: Billing to Footer (Salamat po)
-    // ========================================================
-    const receiptPart2 =
-        LINE + "\n" +
-        "BILLING:     P " + money(billing) + "\n" +
-        "PREV BAL:    P " + money(bal) + "\n" +
-        LINE + "\n" +
-        "GRAND TOTAL: P " + money(grandTotal) + "\n" +
-        "Payment:     P " + money(payment) + "\n" +
-        LINE + "\n" +
-        "Balance:     P " + money(utang) + "\n" +
-        EQUAL + "\n" +
-        ESC_ALIGN_CENTER +
-        centerText("Salamat po sa Pagtangkilik!") + "\n" +
-        EQUAL +
-        ESC_FEED;
-
-    // Combine both cleanly
-    const fullReceipt = receiptPart1 + receiptPart2;
-
     await sendToPrinter(fullReceipt);
 }
 

@@ -1926,49 +1926,48 @@ async function printRowReceipt(rowNum) {
     });
 
     // ========================================================
-    // ESC/POS COMMANDS
+    // ESC/POS COMMANDS & 32-CHAR LAYOUT HELPERS
     // ========================================================
     const ESC_INIT = "\x1B\x40";
     const ESC_ALIGN_CENTER = "\x1B\x61\x01";
     const ESC_ALIGN_LEFT = "\x1B\x61\x00";
     const ESC_FONT_A = "\x1B\x21\x00";
 
-    const LINE = "------------------------------";
-    const EQUAL = "==============================";
+    const LINE = "--------------------------------"; // Exactly 32 chars
+    const EQUAL = "================================"; // Exactly 32 chars
 
     function money(value) {
         return Number(value).toFixed(2);
     }
 
-    function centerText(text, width = 30) {
+    function centerText(text, width = 32) {
         text = String(text);
-
         if (text.length >= width) {
             return text.substring(0, width);
         }
-
         const left = Math.floor((width - text.length) / 2);
         return " ".repeat(left) + text;
     }
 
+    // Ensures items line up perfectly within 32 chars width
     function formatItemLine(item, qty, amount) {
-        const itemCol = String(item).padEnd(9, " ");
+        const itemCol = String(item).padEnd(8, " ");
         const qtyCol = String(qty).padStart(4, " ");
-        const amountCol = ("P " + money(amount)).padStart(12, " ");
+        const amountCol = ("P " + money(amount)).padStart(20, " ");
+        return itemCol + qtyCol + amountCol;
+    }
 
-        return itemCol + qtyCol + "   " + amountCol;
+    // Ensures summary lines (Billing, Grand Total, etc.) never exceed 32 chars width
+    function formatSummaryLine(label, value) {
+        const valStr = "P " + money(value);
+        const spaces = 32 - label.length - valStr.length;
+        return label + " ".repeat(Math.max(1, spaces)) + valStr;
     }
 
     const itemLine1 = formatItemLine("DRY", dry, dryAmt);
     const itemLine2 = formatItemLine("FRESH", fresh, freshAmt);
     const itemLine3 = formatItemLine("CAB", cab, cabAmt);
     const itemLine4 = formatItemLine("BO", bo, boAmt);
-
-    const billingText = "P " + money(billing);
-    const balText = "P " + money(bal);
-    const grandText = "P " + money(grandTotal);
-    const paymentText = "P " + money(payment);
-    const utangText = "P " + money(utang);
 
     const ESC_FEED = "\x1B\x64\x08"; 
 
@@ -1986,27 +1985,27 @@ async function printRowReceipt(rowNum) {
         "Customer: " + customerName + "\n" +
         "Print Copy #" + currentCount + "\n" +
         LINE + "\n" +
-        "ITEM       QTY      AMOUNT\n" +
+        "ITEM    QTY         AMOUNT\n" +
         LINE + "\n" +
         itemLine1 + "\n" +
         itemLine2 + "\n" +
         itemLine3 + "\n" +
         itemLine4 + "\n" +
         LINE + "\n" +
-        "BILLING:     " + billingText.padStart(17, " ") + "\n" +
-        "PREV. BAL:   " + balText.padStart(17, " ") + "\n" +
+        formatSummaryLine("BILLING:", billing) + "\n" +
+        formatSummaryLine("PREV. BAL:", bal) + "\n" +
         LINE + "\n" +
-        "GRAND TOTAL: " + grandText.padStart(17, " ") + "\n" +
-        "Payment:     " + paymentText.padStart(17, " ") + "\n" +
+        formatSummaryLine("GRAND TOTAL:", grandTotal) + "\n" +
+        formatSummaryLine("Payment:", payment) + "\n" +
         LINE + "\n" +
-        "Balance:     " + utangText.padStart(17, " ") + "\n" +
+        formatSummaryLine("Balance:", utang) + "\n" +
         EQUAL + "\n" +
         ESC_ALIGN_CENTER +
         centerText("Salamat po sa Pagtangkilik!") + "\n" +
         EQUAL +
         ESC_FEED;
 
-    // Direct print without simulator alert
+    // Direct print automatically without popup simulator
     await sendToPrinter(singleReceiptText);
 }
 

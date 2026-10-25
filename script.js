@@ -1799,6 +1799,7 @@ async function printActiveRowReceipt() {
         alert("Pumili muna ng customer bago mag-print!");
     }
 }
+
 async function printRowReceipt(rowNum) {
     const d = new Date();
     const year = d.getFullYear();
@@ -1925,15 +1926,15 @@ async function printRowReceipt(rowNum) {
     });
 
     // ========================================================
-    // ESC/POS COMMANDS & HELPERS
+    // ESC/POS COMMANDS & STACKED LAYOUT (WRAP-PROOF FOR PT-210)
     // ========================================================
     const ESC_INIT = "\x1B\x40";
     const ESC_ALIGN_CENTER = "\x1B\x61\x01";
     const ESC_ALIGN_LEFT = "\x1B\x61\x00";
     const ESC_FONT_A = "\x1B\x21\x00";
 
-    const LINE = "----------------------------"; // 28 chars
-    const EQUAL = "============================"; // 28 chars
+    const LINE = "----------------------------"; // Safe 28 chars
+    const EQUAL = "============================"; // Safe 28 chars
 
     function money(value) {
         return Number(value).toFixed(2);
@@ -1948,24 +1949,11 @@ async function printRowReceipt(rowNum) {
         return " ".repeat(left) + text;
     }
 
-    function formatItemLine(item, qty, amount) {
-        const itemCol = String(item).padEnd(6, " ");
-        const qtyCol = String(qty).padStart(3, " ");
-        const amountCol = ("P " + money(amount)).padStart(19, " ");
-        return itemCol + qtyCol + amountCol;
-    }
-
-    const itemLine1 = formatItemLine("DRY", dry, dryAmt);
-    const itemLine2 = formatItemLine("FRESH", fresh, freshAmt);
-    const itemLine3 = formatItemLine("CAB", cab, cabAmt);
-    const itemLine4 = formatItemLine("BO", bo, boAmt);
-
     const ESC_FEED = "\x1B\x64\x08"; 
 
-    // ========================================================
-    // TABLE 1: Header to Items (DRY, FRESH, CAB, BO)
-    // ========================================================
-    const receiptPart1 =
+    // STACKED FORMAT: Items and summary lines are printed vertically 
+    // so the thermal printer buffer never wraps or breaks columns.
+    const singleReceiptText =
         ESC_INIT +
         ESC_FONT_A +
         ESC_ALIGN_CENTER +
@@ -1979,13 +1967,46 @@ async function printRowReceipt(rowNum) {
         "Customer: " + customerName + "\n" +
         "Print Copy #" + currentCount + "\n" +
         LINE + "\n" +
-        "ITEM  QTY         AMOUNT\n" +
+        
+        // Item 1
+        "DRY (" + dry + " x " + priceReg + "):\n" +
+        "  -> P " + money(dryAmt) + "\n" +
+        
+        // Item 2
+        "FRESH (" + fresh + " x " + priceFresh + "):\n" +
+        "  -> P " + money(freshAmt) + "\n" +
+        
+        // Item 3
+        "CAB (" + cab + " x " + priceCab + "):\n" +
+        "  -> P " + money(cabAmt) + "\n" +
+        
+        // Item 4
+        "BO (" + bo + " pcs):\n" +
+        "  -> P " + money(boAmt) + "\n" +
+        
         LINE + "\n" +
-        itemLine1 + "\n" +
-        itemLine2 + "\n" +
-        itemLine3 + "\n" +
-        itemLine4 + "\n";
-    await sendToPrinter(fullReceipt);
+        
+        // Summary Section (Stacked & Wrap-proof)
+        "BILLING:\n" +
+        "  -> P " + money(billing) + "\n" +
+        "PREV. BALANCE:\n" +
+        "  -> P " + money(bal) + "\n" +
+        LINE + "\n" +
+        "GRAND TOTAL:\n" +
+        "  -> P " + money(grandTotal) + "\n" +
+        "PAYMENT:\n" +
+        "  -> P " + money(payment) + "\n" +
+        LINE + "\n" +
+        "BALANCE (UTANG):\n" +
+        "  -> P " + money(utang) + "\n" +
+        
+        EQUAL + "\n" +
+        ESC_ALIGN_CENTER +
+        centerText("Salamat po sa Pagtangkilik!") + "\n" +
+        EQUAL +
+        ESC_FEED;
+
+    await sendToPrinter(singleReceiptText);
 }
 
 // ============================================================

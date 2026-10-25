@@ -1,12 +1,13 @@
-const CACHE_NAME = 'miki-ledger-v3';
+const CACHE_NAME = 'miki-ledger-v4'; // Tinaas natin sa v4 para mag-update
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
+  './styles.css', // <-- Eto ang idinagdag natin para sumama ang disenyo!
   './script.js',
   './manifest.json'
 ];
 
-// 1. INSTALL: I-cache ang mga pangunahing files
+// 1. INSTALL
 self.addEventListener('install', (e) => {
   e.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -16,7 +17,7 @@ self.addEventListener('install', (e) => {
   self.skipWaiting();
 });
 
-// 2. ACTIVATE: Linisin ang mga lumang caches
+// 2. ACTIVATE
 self.addEventListener('activate', (e) => {
   e.waitUntil(
     caches.keys().then((keys) => {
@@ -32,9 +33,8 @@ self.addEventListener('activate', (e) => {
   self.clients.claim();
 });
 
-// 3. FETCH: Saluhin ang offline requests para hindi mag-crash ang app
+// 3. FETCH
 self.addEventListener('fetch', (e) => {
-  // Kung nagbubukas o nag-a-access ng pahina (navigation), ibigay agad ang index.html
   if (e.request.mode === 'navigate') {
     e.respondWith(
       caches.match('./index.html').then((res) => {
@@ -44,11 +44,9 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // Para sa ibang files (JS, CSS, images)
   e.respondWith(
     caches.match(e.request).then((res) => {
       return res || fetch(e.request).catch(() => {
-        // Kung offline at walang cache, huwag hayaang mag-crash
         return new Response('', { status: 404, statusText: 'Offline' });
       });
     })

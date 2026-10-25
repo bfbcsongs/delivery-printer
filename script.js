@@ -1836,19 +1836,10 @@ async function printRowReceipt(rowNum) {
     const ESC_ALIGN_LEFT = "\x1B\x61\x00";
     const ESC_FONT_A = "\x1B\x21\x00";
 
-    // Helper function para sa pantay na resibo
-    function formatReceiptLine(item, qty, amount) {
-        const itemCol = String(item).padEnd(6, ' ');     
-        const qtyCol = String(qty).padStart(4, ' ');       
-        const amtStr = "P " + Number(amount).toFixed(2);
-        const amtCol = amtStr.padStart(12, ' ');          
-        return itemCol + "  " + qtyCol + "  " + amtCol;    
-    }
-
-    const itemLine1 = formatReceiptLine("DRY", dry, dryAmt);
-    const itemLine2 = formatReceiptLine("FRESH", fresh, freshAmt);
-    const itemLine3 = formatReceiptLine("CAB", cab, cabAmt);
-    const itemLine4 = formatReceiptLine("BO", bo, boAmt);
+    const itemLine1 = "DRY   " + String(dry).padEnd(5) + "    P " + String(dryAmt.toFixed(2)).padStart(8);
+    const itemLine2 = "FRESH " + String(fresh).padEnd(5) + "    P " + String(freshAmt.toFixed(2)).padStart(8);
+    const itemLine3 = "CAB   " + String(cab).padEnd(5) + "    P " + String(cabAmt.toFixed(2)).padStart(8);
+    const itemLine4 = "BO    " + String(bo).padEnd(5) + "    P " + String(boAmt.toFixed(2)).padStart(8);
 
     const singleReceiptText = ESC_INIT + ESC_FONT_A + ESC_ALIGN_CENTER +
 "================================\n" +
@@ -1861,21 +1852,20 @@ ESC_ALIGN_LEFT +
 "Customer: " + customerName + "\n" +
 "Print Copy #" + currentCount + "\n" +
 "--------------------------------\n" +
-"ITEM      QTY              AMOUNT        AMOUNT\n" +
+"ITEM    QTY           AMOUNT    \n" +
 "--------------------------------\n" +
-itemLine1  + "\n" +
-itemLine2  + "\n" +
-itemLine3  + "\n" +
-itemLine4  + "\n" +
+itemLine1   + "\n" +
+itemLine2   + "\n" +
+itemLine3   + "\n" +
+itemLine4   + "\n" +
 "--------------------------------\n" +
-"BILLING:         " + ("P " + billing.toFixed(2)).padStart(16, ' ') + "\n" +
-"PREV. BAL:       " + ("P " + bal.toFixed(2)).padStart(16, ' ') + "\n" +
+"BILLING:          P " + String(billing.toFixed(2)).padStart(10) + "\n" +
+"PREV. BAL:        P " + String(bal.toFixed(2)).padStart(10) + "\n" +
 "--------------------------------\n" +
-"GRAND TOTAL:     " + ("P " + grandTotal.toFixed(2)).padStart(16, ' ') + "\n" +
+"GRAND TOTAL:      P " + String(grandTotal.toFixed(2)).padStart(10) + "\n" +
+"Payment:          P " + String(payment.toFixed(2)).padStart(10) + "\n" +
 "--------------------------------\n" +
-"Payment:         " + ("P " + payment.toFixed(2)).padStart(16, ' ') + "\n" +
-"--------------------------------\n" +
-"Balance:         " + ("P " + utang.toFixed(2)).padStart(16, ' ') + "\n" +
+"Balance:          P " + String(utang.toFixed(2)).padStart(10) + "\n" +
 "================================\n" +
 ESC_ALIGN_CENTER +
 "  Salamat po sa Pagtangkilik!  \n" +

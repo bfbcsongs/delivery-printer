@@ -38,12 +38,12 @@ function installApp() {
 }
 
 // ============================================================
-// SERVICE WORKER
+// SERVICE WORKER (NA-UPDATE: INALIS NA ANG ?v=1)
 // ============================================================
 
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js?v=1', {
+        navigator.serviceWorker.register('./sw.js', {
             scope: './'
         })
         .then(reg => {

@@ -1799,7 +1799,7 @@ async function printActiveRowReceipt() {
         alert("Pumili muna ng customer bago mag-print!");
     }
 }
- async function printRowReceipt(rowNum) {
+async function printRowReceipt(rowNum) {
     const d = new Date();
     const year = d.getFullYear();
     const month = String(d.getMonth() + 1).padStart(2, '0');
@@ -1925,15 +1925,15 @@ async function printActiveRowReceipt() {
     });
 
     // ========================================================
-    // ESC/POS COMMANDS & SAFE 28-CHAR BORDER WITH 24-CHAR CONTENT
+    // ESC/POS COMMANDS & HELPERS
     // ========================================================
     const ESC_INIT = "\x1B\x40";
     const ESC_ALIGN_CENTER = "\x1B\x61\x01";
     const ESC_ALIGN_LEFT = "\x1B\x61\x00";
     const ESC_FONT_A = "\x1B\x21\x00";
 
-    const LINE = "----------------------------"; // 28 chars for outer border
-    const EQUAL = "============================"; // 28 chars for outer border
+    const LINE = "----------------------------"; // 28 chars
+    const EQUAL = "============================"; // 28 chars
 
     function money(value) {
         return Number(value).toFixed(2);
@@ -1948,20 +1948,11 @@ async function printActiveRowReceipt() {
         return " ".repeat(left) + text;
     }
 
-    // Strict 24-character content width inside the 28-char physical printer limit
     function formatItemLine(item, qty, amount) {
         const itemCol = String(item).padEnd(6, " ");
         const qtyCol = String(qty).padStart(3, " ");
-        const amountCol = ("P " + money(amount)).padStart(15, " ");
-        return itemCol + qtyCol + amountCol; // Total = 24 chars, leaving safe margin
-    }
-
-    function formatSummaryLine(label, value) {
-        const valStr = "P " + money(value);
-        // Target 24 characters width to guarantee it never hits the printer edge
-        const targetWidth = 24;
-        const spaces = targetWidth - label.length - valStr.length;
-        return label + " ".repeat(Math.max(1, spaces)) + valStr;
+        const amountCol = ("P " + money(amount)).padStart(19, " ");
+        return itemCol + qtyCol + amountCol;
     }
 
     const itemLine1 = formatItemLine("DRY", dry, dryAmt);
@@ -1971,7 +1962,10 @@ async function printActiveRowReceipt() {
 
     const ESC_FEED = "\x1B\x64\x08"; 
 
-    const singleReceiptText =
+    // ========================================================
+    // TABLE 1: Header to Items (DRY, FRESH, CAB, BO)
+    // ========================================================
+    const receiptPart1 =
         ESC_INIT +
         ESC_FONT_A +
         ESC_ALIGN_CENTER +
@@ -1985,28 +1979,36 @@ async function printActiveRowReceipt() {
         "Customer: " + customerName + "\n" +
         "Print Copy #" + currentCount + "\n" +
         LINE + "\n" +
-        "ITEM  QTY        AMOUNT\n" +
+        "ITEM  QTY         AMOUNT\n" +
         LINE + "\n" +
         itemLine1 + "\n" +
         itemLine2 + "\n" +
         itemLine3 + "\n" +
-        itemLine4 + "\n" +
+        itemLine4 + "\n";
+
+    // ========================================================
+    // TABLE 2: Billing to Footer (Salamat po)
+    // ========================================================
+    const receiptPart2 =
         LINE + "\n" +
-        formatSummaryLine("BILLING:", billing) + "\n" +
-        formatSummaryLine("PREV BAL:", bal) + "\n" +
+        "BILLING:     P " + money(billing) + "\n" +
+        "PREV BAL:    P " + money(bal) + "\n" +
         LINE + "\n" +
-        formatSummaryLine("GRAND TOTAL:", grandTotal) + "\n" +
-        formatSummaryLine("Payment:", payment) + "\n" +
+        "GRAND TOTAL: P " + money(grandTotal) + "\n" +
+        "Payment:     P " + money(payment) + "\n" +
         LINE + "\n" +
-        formatSummaryLine("Balance:", utang) + "\n" +
+        "Balance:     P " + money(utang) + "\n" +
         EQUAL + "\n" +
         ESC_ALIGN_CENTER +
         centerText("Salamat po sa Pagtangkilik!") + "\n" +
         EQUAL +
         ESC_FEED;
 
-    await sendToPrinter(singleReceiptText);
- }
+    // Combine both cleanly
+    const fullReceipt = receiptPart1 + receiptPart2;
+
+    await sendToPrinter(fullReceipt);
+}
 
 // ============================================================
 // TARGETED SCREENSHOT FUNCTION

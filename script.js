@@ -1815,12 +1815,7 @@ async function printRowReceipt(rowNum) {
     localStorage.setItem(storageKey, currentCount.toString());
 
     saveLedger();
-        // Pansamantalang ipalit habang nagte-test ka para hindi masayang ang papel:
-    alert(singleReceiptText);
-    
-    // I-comment out muna ito habang nagte-test:
-    // await sendToPrinter(singleReceiptText);
-
+        
     // ========================================================
     // CUSTOMER DATA
     // ========================================================
@@ -2018,6 +2013,11 @@ async function printRowReceipt(rowNum) {
         EQUAL +
         ESC_FEED; // <-- ETO ANG NASA PINAKADULO NG TEXT BAGO IPADALA SA PRINTER
 
+    // Pansamantalang ipalit habang nagte-test ka para hindi masayang ang papel:
+    alert(singleReceiptText);
+    
+    // I-comment out muna ito habang nagte-test:
+    // await sendToPrinter(singleReceiptText);
     await sendToPrinter(singleReceiptText);
 }
 

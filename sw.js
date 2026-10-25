@@ -1,55 +1,153 @@
-const CACHE_NAME = 'miki-ledger-clean-v1';
-const ASSETS_TO_CACHE = [
-  './',
-  './index.html',
-  './styles.css',
-  './script.js',
-  './manifest.json'
+// ============================================================
+// MIKI TABLE & LEDGER — SERVICE WORKER
+// ============================================================
+
+const CACHE_NAME = 'miki-ledger-v2';
+
+const CORE_ASSETS = [
+    './',
+    './index.html',
+    './style.css',
+    './script.js',
+    './manifest.json'
 ];
 
-// 1. INSTALL: I-save lahat ng core files
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
-  );
-  self.skipWaiting();
+// ============================================================
+// INSTALL
+// ============================================================
+
+self.addEventListener('install', event => {
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then(cache => cache.addAll(CORE_ASSETS))
+            .then(() => self.skipWaiting())
+    );
 });
 
-// 2. ACTIVATE: Linisin ang lumang caches
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            return caches.delete(key);
-          }
+
+// ============================================================
+// ACTIVATE
+// ============================================================
+
+self.addEventListener('activate', event => {
+    event.waitUntil(
+        caches.keys()
+            .then(cacheNames => {
+                return Promise.all(
+                    cacheNames.map(cacheName => {
+                        if (cacheName !== CACHE_NAME) {
+                            return caches.delete(cacheName);
+                        }
+                    })
+                );
+            })
+            .then(() => self.clients.claim())
+    );
+});
+
+
+// ============================================================
+// FETCH
+// ============================================================
+
+self.addEventListener('fetch', event => {
+
+    const request = event.request;
+
+    // Only handle GET requests
+    if (request.method !== 'GET') {
+        return;
+    }
+
+    // --------------------------------------------------------
+    // PAGE / NAVIGATION
+    // Network first → cache fallback
+    // --------------------------------------------------------
+
+    if (request.mode === 'navigate') {
+
+        event.respondWith(
+            fetch(request)
+                .then(response => {
+
+                    // Save fresh HTML into cache
+                    const responseClone = response.clone();
+
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put('./index.html', responseClone);
+                    });
+
+                    return response;
+                })
+                .catch(() => {
+                    return caches.match('./index.html');
+                })
+        );
+
+        return;
+    }
+
+
+    // --------------------------------------------------------
+    // LOCAL STATIC ASSETS
+    // Cache first → network fallback
+    // --------------------------------------------------------
+
+    const url = new URL(request.url);
+
+    if (url.origin === self.location.origin) {
+
+        event.respondWith(
+
+            caches.match(request)
+                .then(cachedResponse => {
+
+                    if (cachedResponse) {
+                        return cachedResponse;
+                    }
+
+                    return fetch(request)
+                        .then(response => {
+
+                            if (response && response.status === 200) {
+
+                                const responseClone = response.clone();
+
+                                caches.open(CACHE_NAME).then(cache => {
+                                    cache.put(request, responseClone);
+                                });
+                            }
+
+                            return response;
+                        });
+                })
+                .catch(() => {
+
+                    // Do NOT return index.html for CSS/JS/images/etc.
+                    return new Response('', {
+                        status: 503,
+                        statusText: 'Offline'
+                    });
+
+                })
+        );
+
+        return;
+    }
+
+
+    // --------------------------------------------------------
+    // EXTERNAL REQUESTS
+    // Network only
+    // --------------------------------------------------------
+
+    event.respondWith(
+        fetch(request).catch(() => {
+            return new Response('', {
+                status: 503,
+                statusText: 'Offline'
+            });
         })
-      );
-    })
-  );
-  self.clients.claim();
-});
+    );
 
-// 3. FETCH: Laging unahin ang Cache (Cache-First) para laging buksan ang app kahit offline
-self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((cachedResponse) => {
-      // Kung nahanap sa cache, ibigay agad
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      
-      // Kung wala, subukang i-fetch online
-      return fetch(e.request).catch(() => {
-        // Kung offline at navigation request ito, ibigay ang index.html sa halip na error screen
-        if (e.request.mode === 'navigate' || e.request.destination === 'document') {
-          return caches.match('./index.html');
-        }
-        return caches.match('./index.html'); // Fallback para hindi mag-404
-      });
-    })
-  );
 });

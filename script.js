@@ -1874,12 +1874,13 @@ ESC_ALIGN_CENTER +
     await sendToPrinter(singleReceiptText);
 }
 
-// ============================================================
-// TARGETED SCREENSHOT FUNCTION
+//// ============================================================
+// TARGETED SCREENSHOT FUNCTION (UPDATED WITH SWITCHING BAR)
 // ============================================================
 function takeScreenshot() {
     harvestTableValues();
     const sessionBar = document.querySelector('.session-bar');
+    const viewToggleBtn = document.getElementById('viewToggleBtn'); // <-- Idinagdag natin dito ang switching bar
     const table2 = document.querySelector('.table-box-2');
     const table3 = document.querySelector('.table-box-3');
     const noteBar = document.getElementById('newTableNoteBar');
@@ -1895,6 +1896,7 @@ function takeScreenshot() {
     captureContainer.style.width = document.querySelector('.main-wrapper').clientWidth + 'px';
 
     if (sessionBar) captureContainer.appendChild(sessionBar.cloneNode(true));
+    if (viewToggleBtn) captureContainer.appendChild(viewToggleBtn.cloneNode(true)); // <-- Isinama sa pagbuo ng capture container
 
     const clonedTable2 = table2.cloneNode(true);
     
